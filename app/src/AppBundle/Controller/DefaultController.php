@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Api\Weather\WeatherInfoClimat;
 use AppBundle\Api\Transport\GoogleDirection;
+use AppBundle\Client\ClientRequest;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use AppBundle\Model\ApiData;
 use AppBundle\Resolver\ApiServiceResolver;
@@ -21,10 +22,11 @@ class DefaultController extends Controller
     /**
      * @Route("/", name="homepage")
      */
-    public function indexAction(Request $request)
+    public function indexAction(ClientRequest $request)
     {
         // Simulation of user input to retrieve related services from his keywords
-        $services = $this->get(ApiServiceResolver::class)->resolveByApiKeyWords(['metro', 'meteo', 'slip', 'bike']);
+        $services = $this->get(ApiServiceResolver::class)
+            ->resolveByApiKeyWords(explode(' ', $request->getText()));
 
         $apiData = new ApiData();
         $apiData->setType(self::API_DATA_TYPE);
