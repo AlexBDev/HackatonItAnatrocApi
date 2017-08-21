@@ -35,15 +35,17 @@ RUN docker-php-ext-install -j$(nproc) \
 RUN pecl channel-update pecl
 RUN pecl install apcu-5.1.7 && docker-php-ext-enable apcu
 
-COPY conf/php.ini /usr/local/etc/php/php.ini
-COPY conf/www.conf.default /usr/local/etc/php-fpm.d/www.conf.default
+COPY ./conf/php.ini /usr/local/etc/php/php.ini
+COPY ./conf/www.conf.default /usr/local/etc/php-fpm.d/www.conf.default
+COPY ./scripts/bootstrap.sh /usr/local/bin/bootstrap
+
+RUN chown $user:$user /usr/local/bin/bootstrap && chmod 775 /usr/local/bin/bootstrap
 
 ADD https://getcomposer.org/composer.phar /usr/local/bin/composer
 RUN chown $user:$user /usr/local/bin/composer && chmod 775 /usr/local/bin/composer
 
 ADD https://symfony.com/installer /usr/local/bin/symfony
 RUN chown $user:$user /usr/local/bin/symfony && chmod 775 /usr/local/bin/symfony
-
 
 # Set password and add sudo group to new user
 RUN echo "$user:$user" | chpasswd
@@ -57,3 +59,5 @@ USER $user
 RUN echo "alias sf='php bin/console'\n"  >> /home/$user/.bashrc
 
 WORKDIR /usr/share/nginx/html
+
+CMD bootstrap
