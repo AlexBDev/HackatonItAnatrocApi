@@ -37,9 +37,6 @@ RUN pecl install apcu-5.1.7 && docker-php-ext-enable apcu
 
 COPY ./conf/php.ini /usr/local/etc/php/php.ini
 COPY ./conf/www.conf.default /usr/local/etc/php-fpm.d/www.conf.default
-COPY ./scripts/bootstrap.sh /usr/local/bin/bootstrap
-
-RUN chown $user:$user /usr/local/bin/bootstrap && chmod 775 /usr/local/bin/bootstrap
 
 ADD https://getcomposer.org/composer.phar /usr/local/bin/composer
 RUN chown $user:$user /usr/local/bin/composer && chmod 775 /usr/local/bin/composer
