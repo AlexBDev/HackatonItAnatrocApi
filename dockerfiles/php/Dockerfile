@@ -59,5 +59,3 @@ USER $user
 RUN echo "alias sf='php bin/console'\n"  >> /home/$user/.bashrc
 
 WORKDIR /usr/share/nginx/html
-
-CMD bootstrap
