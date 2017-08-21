@@ -1,0 +1,30 @@
+version: '3.0'
+services:
+    php:
+        build:
+            context: ./dockerfiles/php
+            args:
+                - user=${USER}
+        volumes:
+            - ./app:/usr/share/nginx/html
+        networks:
+            static-network:
+
+    nginx:
+        build:
+            context: dockerfiles/nginx/php
+        volumes:
+            - ./app:/usr/share/nginx/html
+        links:
+            - php
+        depends_on:
+            - php
+        networks:
+            static-network:
+                ipv4_address: 172.40.0.10
+
+networks:
+    static-network:
+        ipam:
+            config:
+                - subnet: 172.40.0.0/24
