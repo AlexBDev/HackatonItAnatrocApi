@@ -13,7 +13,7 @@ use AppBundle\Api\AbstractApi;
 use AppBundle\Api\ApiKeywordInterface;
 use AppBundle\Model\Localisation;
 use AppBundle\Model\Transport\TransportData;
-use GuzzleHttp\Client;
+use AppBundle\Request\ClientREST;
 
 /**
  * Provide direction for driving (for now), with distance, duration, start & end location
@@ -34,9 +34,9 @@ class GoogleDirection extends AbstractApi implements ApiKeywordInterface
     protected $type = self::API_DATA_TYPE;
 
     /**
-     * @var Client
+     * @var ClientREST
      */
-    private $guzzle;
+    private $clientRest;
 
     /**
      * @var array
@@ -45,12 +45,13 @@ class GoogleDirection extends AbstractApi implements ApiKeywordInterface
 
     /**
      * GoogleDirection constructor.
+     * @param ClientREST $client
      * @param array $parameters
      */
-    public function __construct(array $parameters)
+    public function __construct(ClientREST $client, array $parameters)
     {
         $this->parameters = $parameters['google_direction'];
-        $this->guzzle = new Client(['connect_timeout' => 3]);
+        $this->clientRest = $client;
     }
 
     /**
@@ -67,11 +68,11 @@ class GoogleDirection extends AbstractApi implements ApiKeywordInterface
     }
 
     /**
-     * @return Client
+     * @return ClientREST
      */
-    private function getGuzzle(): Client
+    private function getClient(): ClientREST
     {
-        return $this->guzzle;
+        return $this->clientRest;
     }
 
     /**
@@ -82,12 +83,17 @@ class GoogleDirection extends AbstractApi implements ApiKeywordInterface
         return $this->parameters;
     }
 
-    public function getDirection()
+    /**
+     * @param $from null|string|Localisation
+     * @param $to null|string|Localisation
+     * @return array
+     */
+    public function getDirection($from, $to)
     {
         // @todo Wait for input user feature to pass location
         $parameters = [
-            'origin' => 'Disneyland',
-            'destination' => 'Universal+Studios+Hollywood4'
+            'origin' => $from,
+            'destination' => $to
         ];
 
         // @todo Refactor later need to push for the moment
@@ -97,20 +103,33 @@ class GoogleDirection extends AbstractApi implements ApiKeywordInterface
 
         $query = \GuzzleHttp\Psr7\build_query($parameters);
         $url = $this->getParameters()['url'].'json?'.$query;
-        $response = $this->getGuzzle()->get($url);
-        $content = $response->getBody()->getContents();
 
-        $object = \GuzzleHttp\json_decode($content);
+        try {
+            $response = $this->getClient()->get($url);
+            $content = $response->getBody()->getContents();
+            $object = \GuzzleHttp\json_decode($content);
+        } catch (\Exception $e) {
+            $object = null;
+        }
+
 
         return $this->transformToTransport($object, $parameters['mode']);
     }
 
-    private function transformToTransport($object, string $transportType)
+    private function transformToTransport($object, string $transportType): array
     {
         $transports = [];
         $transport = new TransportData();
         $type = $this->getType().'.'.$transportType;
         $transport->setType($type);
+
+        if ($object === null || property_exists($object, 'error_message') && !empty($object->error_message)) {
+            $transport->addError('Impossible de récupérer les données de Google Direction.');
+            $transports[] = $transport;
+
+            return $transports;
+        }
+
         
         foreach ($object->routes as $record) {
             $legs = $record->legs[0];

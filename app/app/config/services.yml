@@ -26,7 +26,7 @@ services:
         resource: '../../src/AppBundle/*'
         # you can exclude directories or files
         # but if a service is unused, it's removed anyway
-        exclude: '../../src/AppBundle/{Entity,Repository,Tests,Model}'
+        exclude: '../../src/AppBundle/{Entity,Repository,Tests,Model,Client}'
 
     # controllers are imported separately to make sure they're public
     # and have a tag that allows actions to type-hint services
@@ -35,12 +35,16 @@ services:
         public: true
         tags: ['controller.service_arguments']
 
+    AppBundle\Request\ClientRest:
+        public: true
+
     AppBundle\Service\Velov\Velov:
         public: true
 
     AppBundle\Api\Transport\GoogleDirection:
       public: true
       arguments:
+        - "@AppBundle\\Request\\ClientRest"
         - "%api%"
 
     AppBundle\Resolver\ApiServiceResolver:
@@ -51,3 +55,7 @@ services:
 
     AppBundle\Api\Weather\WeatherInfoClimat:
       public: true
+
+    AppBundle\ArgumentResolver\ClientRequestValueResolver:
+        tags:
+            - { name: controller.argument_value_resolver, priority: 150 }
