@@ -2,6 +2,7 @@
 
 namespace AppBundle\Service\Velov;
 
+use AppBundle\Model\Localisation;
 use AppBundle\Model\Velov\VelovArret;
 use AppBundle\Api\ApiKeywordInterface;
 
@@ -52,8 +53,7 @@ class Velov implements ApiKeywordInterface
 
             $arret->setAddress($recordData->properties->address);
             $arret->setBikeStands($recordData->properties->bike_stands);
-            $arret->setLatitude($recordData->properties->lat);
-            $arret->setLongitude($recordData->properties->lng);
+            $arret->setLocalisation(new Localisation($recordData->properties->lat,$recordData->properties->lng));
             $arret->setAddress($recordData->properties->address);
             $arret->setCommune($recordData->properties->commune);
             $arret->setStatus($recordData->properties->status);
@@ -89,8 +89,7 @@ class Velov implements ApiKeywordInterface
             $arret = new VelovArret();
             $arret->setAddress($recordData->fields->address);
             $arret->setBikeStands($recordData->fields->bike_stand);
-            $arret->setLatitude($recordData->fields->lat);
-            $arret->setLongitude($recordData->fields->lng);
+            $arret->setLocalisation(new Localisation($recordData->fields->latitude,$recordData->fields->longitude));
             $arret->setAddress($recordData->fields->address);
             $arret->setCommune($recordData->fields->commune);
             $arret->setStatus($recordData->fields->status);

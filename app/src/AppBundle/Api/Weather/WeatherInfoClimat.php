@@ -8,15 +8,16 @@
 
 namespace AppBundle\Api\Weather;
 
+use AppBundle\Model\Localisation;
 use AppBundle\Model\Weather\WeatherData;
 
 class WeatherInfoClimat extends AbstractWeather
 {
-    public function getWeather($lat,$lng)
+    public function getWeather(Localisation $loc)
     {
         //$lat = 45.77987;
         //$lng = 4.88471;
-        $response = $this->getGuzzle()->get('http://www.infoclimat.fr/public-api/gfs/json?_ll='.$lat.','.$lng.'&_auth=UUsCFQ5wV3VVeFdgBnBWf1U9ADULfQIlBnoFZgtuAH1UP1AxUjIHYVM9WyYDLAUzBShXNAA7CTkFbgV9Xy1UNVE7Am4OZVcwVTpXMgYpVn1VewBhCysCJQZmBWULeABiVDFQPVIvB2RTOVs%2BAy0FMwU0VzIAIAkuBWcFZl87VD5RMgJuDmpXPVU5VzEGKVZ9VWMAaQsxAmsGYQVhCzIAMlQ%2FUGJSMgc0U21bMAMtBTMFMlczADsJNwVjBWJfO1QoUS0CHw4eVyhVeld3BmNWJFV7ADULagJu&_c=027a5f6d83c9c484d1f0ba18810b275f');
+        $response = $this->getGuzzle()->get('http://www.infoclimat.fr/public-api/gfs/json?_ll='.$loc->getLat().','.$loc->getLng().'&_auth=UUsCFQ5wV3VVeFdgBnBWf1U9ADULfQIlBnoFZgtuAH1UP1AxUjIHYVM9WyYDLAUzBShXNAA7CTkFbgV9Xy1UNVE7Am4OZVcwVTpXMgYpVn1VewBhCysCJQZmBWULeABiVDFQPVIvB2RTOVs%2BAy0FMwU0VzIAIAkuBWcFZl87VD5RMgJuDmpXPVU5VzEGKVZ9VWMAaQsxAmsGYQVhCzIAMlQ%2FUGJSMgc0U21bMAMtBTMFMlczADsJNwVjBWJfO1QoUS0CHw4eVyhVeld3BmNWJFV7ADULagJu&_c=027a5f6d83c9c484d1f0ba18810b275f');
         $json = \GuzzleHttp\json_decode($response->getBody()->getContents());
 
         $weather = $this->getWeatherByDate($json);
