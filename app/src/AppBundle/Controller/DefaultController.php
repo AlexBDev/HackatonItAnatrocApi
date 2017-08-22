@@ -4,6 +4,9 @@ namespace AppBundle\Controller;
 
 use AppBundle\Api\Weather\WeatherInfoClimat;
 use AppBundle\Api\Transport\GoogleDirection;
+use AppBundle\Model\Localisation;
+use JMS\Serializer\Exception\LogicException;
+use PHPUnit\Runner\Exception;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use AppBundle\Model\ApiData;
 use AppBundle\Resolver\ApiServiceResolver;
@@ -18,11 +21,23 @@ class DefaultController extends Controller
 {
     const API_DATA_TYPE = 'main';
 
+
     /**
      * @Route("/", name="homepage")
+     *
      */
     public function indexAction(Request $request)
     {
+
+        $lat = $request->request->get("lat");
+        $lng = $request->request->get("lng");
+        if(!is_numeric($lat) or !is_numeric($lng))
+        {
+            throw new \LogicException("Bad coordonate");
+        }
+        $loc = new Localisation(floatval($lat),floatval($lng) );
+
+
         // Simulation of user input to retrieve related services from his keywords
         $services = $this->get(ApiServiceResolver::class)->resolveByApiKeyWords(['metro', 'meteo', 'slip', 'bike']);
 
@@ -38,14 +53,14 @@ class DefaultController extends Controller
             if ($service instanceof Velov) {
                 //Define an array of VelovArret object
                 $data = $this->get(Velov::class)->setVelovParc();
-                $nbVeloToSee = 15;
                 //Return the formated data array
-                $apiData->addData(VelovParc::returnFirstsInArray($nbVeloToSee, $data));
+                $apiData->addData(VelovParc::getNearStop($data, $loc));
             }
 
             if ($service instanceof WeatherInfoClimat) {
+
                 //Define an array of WeatherInfoClimat object
-                $data = $this->get(WeatherInfoClimat::class)->getWeather();
+                $data = $this->get(WeatherInfoClimat::class)->getWeather($loc);
                 $apiData->addData($data);
             }
         }

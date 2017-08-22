@@ -2,6 +2,8 @@
 
 namespace AppBundle\Model\Velov;
 
+use AppBundle\Model\Localisation;
+
 /**
  * Created by PhpStorm.
  * User: apprenant
@@ -14,8 +16,7 @@ class VelovArret
     private $name;
     private $address;
     private $commune;
-    private $latitude;
-    private $longitude;
+    private $localisation ;
     private $bike_stands;
     private $status;
     private $availableStand;
@@ -66,38 +67,6 @@ class VelovArret
     public function setCommune($commune)
     {
         $this->commune = $commune;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getLatitude()
-    {
-        return $this->latitude;
-    }
-
-    /**
-     * @param mixed $latitude
-     */
-    public function setLatitude($latitude)
-    {
-        $this->latitude = $latitude;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getLongitude()
-    {
-        return $this->longitude;
-    }
-
-    /**
-     * @param mixed $longitude
-     */
-    public function setLongitude($longitude)
-    {
-        $this->longitude = $longitude;
     }
 
     /**
@@ -159,5 +128,23 @@ class VelovArret
             $data[$key] = $value;
         }
     }
+
+    /**
+     * @return mixed
+     */
+    public function getLocalisation(): Localisation
+    {
+        return $this->localisation;
+    }
+
+    /**
+     * @param mixed $localisation
+     */
+    public function setLocalisation(Localisation $localisation)
+    {
+        $this->localisation = $localisation;
+    }
+
+
 
 }
