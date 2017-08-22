@@ -29,13 +29,16 @@ class DefaultController extends Controller
     public function indexAction(Request $request)
     {
 
-        $lat = $request->request->get("lat");
-        $lng = $request->request->get("lng");
-        if(!is_numeric($lat) or !is_numeric($lng))
+        $fromLat = $request->request->get("fromLat");
+        $fromLng = $request->request->get("fromLng");
+        $toLat = $request->request->get("toLat");
+        $toLng = $request->request->get("toLng");
+        if(!is_numeric($fromLat) || !is_numeric($fromLng) || !is_numeric($toLat) || !is_numeric($toLng))
         {
             throw new \LogicException("Bad coordonate");
         }
-        $loc = new Localisation(floatval($lat),floatval($lng) );
+        $FromLoc = new Localisation(floatval($fromLat),floatval($fromLng) );
+        $toLoc = new Localisation(floatval($toLat),floatval($toLng) );
 
 
         // Simulation of user input to retrieve related services from his keywords
@@ -54,13 +57,13 @@ class DefaultController extends Controller
                 //Define an array of VelovArret object
                 $data = $this->get(Velov::class)->setVelovParc();
                 //Return the formated data array
-                $apiData->addData(VelovParc::getNearStop($data, $loc));
+                $apiData->addData(VelovParc::getNearStop($data, $fromLoc));
             }
 
             if ($service instanceof WeatherInfoClimat) {
 
                 //Define an array of WeatherInfoClimat object
-                $data = $this->get(WeatherInfoClimat::class)->getWeather($loc);
+                $data = $this->get(WeatherInfoClimat::class)->getWeather($fromLoc);
                 $apiData->addData($data);
             }
         }
