@@ -45,8 +45,11 @@ class DefaultController extends Controller
             }
 
             if ($service instanceof WeatherInfoClimat) {
+                $lat = 45.77987;
+                $lng = 4.88471;
+
                 //Define an array of WeatherInfoClimat object
-                $data = $this->get(WeatherInfoClimat::class)->getWeather();
+                $data = $this->get(WeatherInfoClimat::class)->getWeather($lat,$lng);
                 $apiData->addData($data);
             }
         }
