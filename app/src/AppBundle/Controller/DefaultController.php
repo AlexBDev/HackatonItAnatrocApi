@@ -4,6 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Api\Weather\WeatherInfoClimat;
 use AppBundle\Api\Transport\GoogleDirection;
+use AppBundle\Model\Localisation;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use AppBundle\Model\ApiData;
 use AppBundle\Resolver\ApiServiceResolver;
@@ -105,13 +106,14 @@ class DefaultController extends Controller
             // verify if data is complete
             if($lati && $longi && $formatted_address){
 
+                $loc = new Localisation($lati,$longi);
+
                 // put the data in the array
                 $data_arr = array();
 
                 array_push(
                     $data_arr,
-                    $lati,
-                    $longi,
+                    $loc,
                     $formatted_address
                 );
 
