@@ -5,6 +5,7 @@ parameters:
         classes:
             - AppBundle\Api\Transport\GoogleDirection
             - AppBundle\Service\Velov\Velov
+            - AppBundle\Service\Bluely\Bluely
             - AppBundle\Api\Weather\WeatherInfoClimat
         google_direction:
             url: "https://maps.googleapis.com/maps/api/directions/"

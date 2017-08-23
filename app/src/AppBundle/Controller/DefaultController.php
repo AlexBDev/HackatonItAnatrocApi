@@ -4,6 +4,8 @@ namespace AppBundle\Controller;
 
 use AppBundle\Api\Weather\WeatherInfoClimat;
 use AppBundle\Api\Transport\GoogleDirection;
+
+use AppBundle\Model\Localisation;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use AppBundle\Model\ApiData;
 use AppBundle\Resolver\ApiServiceResolver;
@@ -13,6 +15,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Model\Velov\VelovParc;
 use AppBundle\Service\Velov\Velov;
+use AppBundle\Model\Bluely\Bluely;
+use AppBundle\Service\Bluely\BluelyApi;
 
 class DefaultController extends Controller
 {
@@ -24,7 +28,7 @@ class DefaultController extends Controller
     public function indexAction(Request $request)
     {
         // Simulation of user input to retrieve related services from his keywords
-        $services = $this->get(ApiServiceResolver::class)->resolveByApiKeyWords(['metro', 'meteo', 'slip', 'bike']);
+        $services = $this->get(ApiServiceResolver::class)->resolveByApiKeyWords(['metro', 'meteo', 'slip', 'bike', 'voiture']);
 
         $apiData = new ApiData();
         $apiData->setType(self::API_DATA_TYPE);
@@ -47,6 +51,11 @@ class DefaultController extends Controller
                 //Define an array of WeatherInfoClimat object
                 $data = $this->get(WeatherInfoClimat::class)->getWeather();
                 $apiData->addData($data);
+            }
+
+            if ($service instanceof Bluely)
+            {
+                $data = BluelyApi::getFromGrandLyonApi();
             }
         }
 
