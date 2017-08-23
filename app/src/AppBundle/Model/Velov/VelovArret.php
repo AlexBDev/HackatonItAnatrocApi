@@ -123,6 +123,8 @@ class VelovArret
      */
     public function returnJson(&$data)
     {
+        var_dump($this);
+        die;
         foreach ($this as $key => $value)
         {
             $data[$key] = $value;

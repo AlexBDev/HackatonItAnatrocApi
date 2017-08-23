@@ -50,9 +50,9 @@ class Velov implements ApiKeywordInterface
         foreach ($resultsData->features as $recordData)
         {
             $arret = new VelovArret();
-
             $arret->setAddress($recordData->properties->address);
             $arret->setBikeStands($recordData->properties->bike_stands);
+            $arret->setAvailableStand($recordData->properties->available_bike_stands);
             $arret->setLocalisation(new Localisation($recordData->properties->lat,$recordData->properties->lng));
             $arret->setAddress($recordData->properties->address);
             $arret->setCommune($recordData->properties->commune);
