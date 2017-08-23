@@ -11,7 +11,7 @@ class Velov implements ApiKeywordInterface
 {
     public function setVelovParc()
     {
-        $apiNum = 2;
+        $apiNum = 1;
 
         if($apiNum == 1)
         {
