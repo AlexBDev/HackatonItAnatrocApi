@@ -82,17 +82,17 @@ class GoogleDirection extends AbstractApi implements ApiKeywordInterface
         return $this->parameters;
     }
 
-    public function getDirection()
+    public function getDirection($from, $to, $transportMode)
     {
         // @todo Wait for input user feature to pass location
         $parameters = [
-            'origin' => 'Disneyland',
-            'destination' => 'Universal+Studios+Hollywood4'
+            'origin' => $from,
+            'destination' => $to
         ];
 
         // @todo Refactor later need to push for the moment
         $parameters['units'] = 'metric';
-        $parameters['mode'] = 'driving';
+        $parameters['mode'] = $transportMode;
         $parameters['key'] = $this->getParameters()['key'];
 
         $query = \GuzzleHttp\Psr7\build_query($parameters);
@@ -124,7 +124,6 @@ class GoogleDirection extends AbstractApi implements ApiKeywordInterface
 
             $transports[] = $transport;
         }
-
         return $transports;
     }
 }
