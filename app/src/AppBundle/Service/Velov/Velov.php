@@ -39,8 +39,6 @@ class Velov implements ApiKeywordInterface
 
         $response = $client->request("GET","https://inspire.data.gouv.fr/api/geogw/services/556c63df330f1fcd48345220/feature-types/ms:jcd_jcdecaux.jcdvelov/download?format=GeoJSON&projection=WGS84");
 
-        var_dump($response);
-        die;
         $body = $response->getBody();
         $JSONresult = $body->getContents();
 
@@ -78,8 +76,6 @@ class Velov implements ApiKeywordInterface
         $client = new \GuzzleHttp\Client();
         $response = $client->request("GET","https://public.opendatasoft.com/api/records/1.0/search/?dataset=station-Velov-grand-lyon&lang=fr&rows=10&geofilter.distance=45.8520930694%2C4.34738897685%2C1000000000");
 
-        var_dump($response);
-        die;
         $body = $response->getBody();
         $JSONresult = $body->getContents();
 
