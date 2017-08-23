@@ -17,13 +17,11 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Model\Velov\VelovParc;
 use AppBundle\Service\Velov\Velov;
+use AppBundle\Utils;
 
 class DefaultController extends Controller
 {
     const API_DATA_TYPE = 'main';
-
-
-
 
     /**
      * @Route("/", name="homepage")
@@ -31,26 +29,30 @@ class DefaultController extends Controller
      */
     public function indexAction(Request $request)
     {
-        try
+        // Obligatoire
+        $addressFrom    = $request->request->get("addressFrom");
+        $addressTo      = $request->request->get("addressTo");
+        // Optionnel
+        $latFrom        = $request->request->get("latFrom");
+        $lngFrom        = $request->request->get("lngFrom");
+        $latTo          = $request->request->get("latTo");
+        $lngTo          = $request->request->get("lngTo");
+        if(is_null($addressFrom) || is_null($addressTo))
         {
+            throw new \LogicException("Wrong address given!"); // FIXME --> Renvoyer un code d'erreur à la place d'une exception
+        }
 
-            $lat = $request->request->get("lat");
-            $lng = $request->request->get("lng");
-            if(!isset($lat) || !isset($lng))
-            {
-                throw new \LogicException("Bad coordonate");
-            }
-            if($lat == "" or $lng == "")
-            {
-                throw new \LogicException("Bad coordonate");
-            }
-            if(!is_numeric($lat) or !is_numeric($lng))
-            {
-                throw new \LogicException("Bad coordonate");
-            }
+        if (is_null($latFrom) || is_null($latFrom)){
+            $locFrom = Utils\LocalisationUtils::getCoordonateByAddress($addressFrom);
+        } else {
+            $locFrom = new Localisation(floatval($latFrom),floatval($lngFrom) );
+        }
 
-            $loc = new Localisation(floatval($lat),floatval($lng) );
-
+        if (is_null($latTo) || is_null($latTo)){
+            $locTo = Utils\LocalisationUtils::getCoordonateByAddress($addressTo);
+        } else {
+            $locTo = new Localisation(floatval($latTo),floatval($lngTo) );
+        }
 
             // Simulation of user input to retrieve related services from his keywords
             $services = $this->get(ApiServiceResolver::class)->resolveByApiKeyWords(['metro', 'meteo', 'slip', 'bike']);
@@ -58,92 +60,54 @@ class DefaultController extends Controller
             $apiData = new ApiData();
             $apiData->setType(self::API_DATA_TYPE);
 
-            foreach ($services as $service) {
-                if ($service instanceof GoogleDirection) {
-                    $data = $this->get(GoogleDirection::class)->getDirection();
-                    if(!isset($data) || $data == "")
-                    {
-                        throw new \LogicException("Api google direction has crashed");
-                    }
-                    $apiData->addData($data);
-                }
+        foreach ($services as $service) {
+            if ($service instanceof GoogleDirection) {
+                $directionWalk  = $this->get(GoogleDirection::class)->getDirection($from, $to, "walking");
+                $directionBike  = $this->get(GoogleDirection::class)->getDirection($from, $to, "bicycling");
+                $directionDrive = $this->get(GoogleDirection::class)->getDirection($from, $to, "driving");
 
-                if ($service instanceof Velov) {
-                    //Define an array of VelovArret object
-                    $data = $this->get(Velov::class)->setVelovParc();
-
-                    if(!isset($data) || $data == "")
-                    {
-                        throw new \LogicException("Api Velov has crashed");
-                    }
-                    //Return the formated data array
-                    $apiData->addData(VelovParc::getNearStop($data, $loc));
-                }
-
-                if ($service instanceof WeatherInfoClimat) {
-
-                    //Define an array of WeatherInfoClimat object
-                    $data = $this->get(WeatherInfoClimat::class)->getWeather($loc);
-
-                    if(!isset($data) || $data == "")
-                    {
-                        throw new \LogicException("Api weather has crashed");
-                    }
-                    $apiData->addData($data);
-                }
+                $apiData->addData($directionWalk);
+                $apiData->addData($directionBike);
+                $apiData->addData($directionDrive);
             }
 
-            $serializer = SerializerBuilder::create()->build();
-            $jsonContent = $serializer->serialize($apiData, 'json');
+            if ($service instanceof Velov) {
+                //Define an array of VelovArret object
+                $data = $this->get(Velov::class)->setVelovParc();
+                //Return the formated data array
+                $nearFrom = VelovParc::getNearStop($data, $locFrom);
+                $nearTo = VelovParc::getNearStop($data, $locTo);
+                $nearFrom['arret']->setType("transport.velov.nearFrom");
+                $nearTo['arret']->setType("transport.velov.nearTo");
 
-            return new JsonResponse(
-                $jsonContent,
-                200,
-                [
-                    'Access-Control-Allow-Origin' => '*'
-                ],
-                true
-            );
+                $apiData->addData($nearFrom);
+                $apiData->addData($nearTo);
+
+            }
+
+            if ($service instanceof WeatherInfoClimat) {
+
+                //Define an array of WeatherInfoClimat object
+                $weatherFrom = $this->get(WeatherInfoClimat::class)->getWeather($locFrom);
+                $weatherTo   = $this->get(WeatherInfoClimat::class)->getWeather($locTo);
+                $weatherFrom->setType("weatherFrom");
+                $weatherFrom->setType("weatherTo");
+                $apiData->addData($weatherFrom);
+                $apiData->addData($weatherTo);
+            }
         }
-        //Catch application error
-            // Check post data
-            // Check no return from an api
-        catch ( \LogicException $e)
-        {
-            $errorMessage = explode(" ",$e->getMessage());
-            if($errorMessage[0] == "Bad" && $errorMessage[1] == "coordonate")
-            {
-                $status = 400;
-            }
-            elseif ($errorMessage[0] == "Api" && $errorMessage[2] == "has" && $errorMessage == "crashed")
-            {
-                $status = 502;
-            }
-            else
-            {
-                $status = '500';
-            }
-            return new JsonResponse(
-                $e->getMessage(),
-                $status,
-                [
-                    'Access-Control-Allow-Origin' => '*'
-                ],
-                true
-            );
-        }
-        // Catch Guzzle Error
-        catch ( RequestException $e)
-        {
-            return new JsonResponse(
-                "An error has occurred trying to process your request an api.",
-                502,
-                [
-                    'Access-Control-Allow-Origin' => '*'
-                ],
-                true
-            );
-        }
+
+        $serializer = SerializerBuilder::create()->build();
+        $jsonContent = $serializer->serialize($apiData, 'json');
+
+        return new JsonResponse(
+            $jsonContent,
+            200,
+            [
+                'Access-Control-Allow-Origin' => '*'
+            ],
+            true
+        );
     }
 
     /**
@@ -158,7 +122,6 @@ class DefaultController extends Controller
 
         $serializer = SerializerBuilder::create()->build();
         $jsonContent = $serializer->serialize($data, 'json');
-
 
         return new JsonResponse($jsonContent, 200, [], true);
     }
