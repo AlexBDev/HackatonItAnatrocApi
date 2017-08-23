@@ -69,11 +69,17 @@ abstract class AbstractApiData
      */
     public function addData($data): AbstractApiData
     {
+
         if (is_array($data) || $data instanceof AbstractApiData) {
             if (!is_array($data)) {
                 array_push($this->data, $data);
             } else {
-                $this->data = array_merge($this->getData(), $data);
+                // Petit hack pour les arrets Velov
+                if (isset($data['arret']) && !empty($data['arret'])){
+                    array_push($this->data, $data);
+                } else {
+                    $this->data = array_merge($this->getData(), $data);
+                }
             }
 
             return $this;
