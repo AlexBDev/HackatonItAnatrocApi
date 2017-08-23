@@ -66,24 +66,13 @@ namespace AppBundle\Utils;
              // get the important data
              $lati = $resp['results'][0]['geometry']['location']['lat'];
              $longi = $resp['results'][0]['geometry']['location']['lng'];
-             $formatted_address = $resp['results'][0]['formatted_address'];
 
              // verify if data is complete
-             if($lati && $longi && $formatted_address){
+             if(!is_null($lati) && !is_null($longi)){
 
                  $loc = new Localisation($lati,$longi);
 
-                 // put the data in the array
-                 $data_arr = array();
-
-                 array_push(
-                     $data_arr,
-                     $loc,
-                     $formatted_address
-                 );
-
-                 return $data_arr;
-
+                 return $loc;
              }else{
                  return false;
              }
