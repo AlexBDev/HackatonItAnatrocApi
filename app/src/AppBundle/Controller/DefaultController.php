@@ -16,11 +16,11 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Model\Velov\VelovParc;
 use AppBundle\Service\Velov\Velov;
+use AppBundle\Utils;
 
 class DefaultController extends Controller
 {
     const API_DATA_TYPE = 'main';
-
 
     /**
      * @Route("/", name="homepage")
@@ -28,18 +28,30 @@ class DefaultController extends Controller
      */
     public function indexAction(Request $request)
     {
-
-        $fromLat = $request->request->get("fromLat");
-        $fromLng = $request->request->get("fromLng");
-        $toLat = $request->request->get("toLat");
-        $toLng = $request->request->get("toLng");
-        if(!is_numeric($fromLat) || !is_numeric($fromLng) || !is_numeric($toLat) || !is_numeric($toLng))
+        // Obligatoire
+        $addressFrom    = $request->request->get("addressFrom");
+        $addressTo      = $request->request->get("addressTo");
+        // Optionnel
+        $latFrom        = $request->request->get("latFrom");
+        $lngFrom        = $request->request->get("lngFrom");
+        $latTo          = $request->request->get("latTo");
+        $lngTo          = $request->request->get("lngTo");
+        if(is_null($addressFrom) || is_null($addressTo))
         {
-            throw new \LogicException("Bad coordonate");
+            throw new \LogicException("Wrong address given!"); // FIXME --> Renvoyer un code d'erreur à la place d'une exception
         }
-        $FromLoc = new Localisation(floatval($fromLat),floatval($fromLng) );
-        $toLoc = new Localisation(floatval($toLat),floatval($toLng) );
 
+        if (is_null($latFrom) || is_null($latFrom)){
+            $locFrom = Utils\LocalisationUtils::getCoordonateByAddress($addressFrom);
+        } else {
+            $locFrom = new Localisation(floatval($latFrom),floatval($lngFrom) );
+        }
+
+        if (is_null($latTo) || is_null($latTo)){
+            $locTo = Utils\LocalisationUtils::getCoordonateByAddress($addressTo);
+        } else {
+            $locTo = new Localisation(floatval($latTo),floatval($lngTo) );
+        }
 
         // Simulation of user input to retrieve related services from his keywords
         $services = $this->get(ApiServiceResolver::class)->resolveByApiKeyWords(['metro', 'meteo', 'slip', 'bike']);
@@ -49,22 +61,40 @@ class DefaultController extends Controller
 
         foreach ($services as $service) {
             if ($service instanceof GoogleDirection) {
-                $data = $this->get(GoogleDirection::class)->getDirection();
-                $apiData->addData($data);
+                $from = "44 Rue du 24 Mars 1852, 69009 Lyon";
+                $to   = "157 Avenue Jean Mermoz, 69008 Lyon";
+                $directionWalk  = $this->get(GoogleDirection::class)->getDirection($from, $to, "walking");
+                $directionBike  = $this->get(GoogleDirection::class)->getDirection($from, $to, "bicycling");
+                $directionDrive = $this->get(GoogleDirection::class)->getDirection($from, $to, "driving");
+
+                $apiData->addData($directionWalk);
+                $apiData->addData($directionBike);
+                $apiData->addData($directionDrive);
             }
 
             if ($service instanceof Velov) {
                 //Define an array of VelovArret object
                 $data = $this->get(Velov::class)->setVelovParc();
                 //Return the formated data array
-                $apiData->addData(VelovParc::getNearStop($data, $fromLoc));
+                $nearFrom = VelovParc::getNearStop($data, $locFrom);
+                $nearTo = VelovParc::getNearStop($data, $locTo);
+                $nearFrom['arret']->setType("transport.velov.nearFrom");
+                $nearTo['arret']->setType("transport.velov.nearTo");
+
+                $apiData->addData($nearFrom);
+                $apiData->addData($nearTo);
+
             }
 
             if ($service instanceof WeatherInfoClimat) {
 
                 //Define an array of WeatherInfoClimat object
-                $data = $this->get(WeatherInfoClimat::class)->getWeather($fromLoc);
-                $apiData->addData($data);
+                $weatherFrom = $this->get(WeatherInfoClimat::class)->getWeather($locFrom);
+                $weatherTo   = $this->get(WeatherInfoClimat::class)->getWeather($locTo);
+                $weatherFrom->setType("weatherFrom");
+                $weatherFrom->setType("weatherTo");
+                $apiData->addData($weatherFrom);
+                $apiData->addData($weatherTo);
             }
         }
 
@@ -93,7 +123,6 @@ class DefaultController extends Controller
 
         $serializer = SerializerBuilder::create()->build();
         $jsonContent = $serializer->serialize($data, 'json');
-
 
         return new JsonResponse($jsonContent, 200, [], true);
     }
