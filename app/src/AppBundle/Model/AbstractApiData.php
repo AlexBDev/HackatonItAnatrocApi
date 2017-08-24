@@ -75,7 +75,7 @@ abstract class AbstractApiData
                 array_push($this->data, $data);
             } else {
                 // Petit hack pour les arrets Velov
-                if (isset($data['arret']) && !empty($data['arret'])){
+                if (isset($data['type']) && stristr($data['type'], "transport.velov")){
                     array_push($this->data, $data);
                 } else {
                     $this->data = array_merge($this->getData(), $data);

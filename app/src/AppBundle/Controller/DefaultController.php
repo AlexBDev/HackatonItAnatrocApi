@@ -75,12 +75,21 @@ class DefaultController extends Controller
                 $data = $this->get(Velov::class)->setVelovParc();
                 //Return the formated data array
                 $nearFrom = VelovParc::getNearStop($data, $locFrom);
-                $nearTo = VelovParc::getNearStop($data, $locTo);
-                $nearFrom['arret']->setType("transport.velov.nearFrom");
-                $nearTo['arret']->setType("transport.velov.nearTo");
+                $nearTo   = VelovParc::getNearStop($data, $locTo);
 
-                $apiData->addData($nearFrom);
-                $apiData->addData($nearTo);
+                $nearFromDatas = array(
+                    "type" => "transport.velov.nearFrom",
+                    "data" => array()
+                );
+                $nearToDatas   = array(
+                    "type" => "transport.velov.nearTo",
+                    "data" => array()
+                );
+                array_push($nearFromDatas['data'], $nearFrom);
+                array_push($nearToDatas['data'], $nearTo);
+
+                $apiData->addData($nearFromDatas);
+                $apiData->addData($nearToDatas);
 
             }
 
@@ -90,7 +99,8 @@ class DefaultController extends Controller
                 $weatherFrom = $this->get(WeatherInfoClimat::class)->getWeather($locFrom);
                 $weatherTo   = $this->get(WeatherInfoClimat::class)->getWeather($locTo);
                 $weatherFrom->setType("weatherFrom");
-                $weatherFrom->setType("weatherTo");
+                $weatherTo->setType("weatherTo");
+
                 $apiData->addData($weatherFrom);
                 $apiData->addData($weatherTo);
             }
