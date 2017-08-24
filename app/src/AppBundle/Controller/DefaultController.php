@@ -61,11 +61,9 @@ class DefaultController extends Controller
 
         foreach ($services as $service) {
             if ($service instanceof GoogleDirection) {
-                $from = "44 Rue du 24 Mars 1852, 69009 Lyon";
-                $to   = "157 Avenue Jean Mermoz, 69008 Lyon";
-                $directionWalk  = $this->get(GoogleDirection::class)->getDirection($from, $to, "walking");
-                $directionBike  = $this->get(GoogleDirection::class)->getDirection($from, $to, "bicycling");
-                $directionDrive = $this->get(GoogleDirection::class)->getDirection($from, $to, "driving");
+                $directionWalk  = $this->get(GoogleDirection::class)->getDirection($addressFrom, $addressTo, "walking");
+                $directionBike  = $this->get(GoogleDirection::class)->getDirection($addressFrom, $addressTo, "bicycling");
+                $directionDrive = $this->get(GoogleDirection::class)->getDirection($addressFrom, $addressTo, "driving");
 
                 $apiData->addData($directionWalk);
                 $apiData->addData($directionBike);
