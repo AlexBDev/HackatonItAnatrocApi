@@ -28,13 +28,9 @@ class WeatherInfoClimat extends AbstractWeather
         $weather = new WeatherData();
 
         $weather->setType($this->getType());
-
         $weather->setTemperature($json->temperature->sol - self::KELVIN_TO_CELSIUS);
-
         $weather->setWindForce($json->vent_moyen->{'10m'});
-
         //$weather->setWindDirection($json->vent_direction->{'10m'});
-
         $weather->setWeather($this->getWeatherByParams($json->risque_neige,$json->pluie,$json->pluie_convective,$json->nebulosite->totale,$json->vent_moyen));
 
         return $weather;
