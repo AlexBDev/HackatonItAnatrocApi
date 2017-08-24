@@ -30,7 +30,8 @@ RUN docker-php-ext-install -j$(nproc) \
         pcntl \
         phar \
         simplexml \
-        zip
+        zip \
+        pdo_mysql
 
 RUN pecl channel-update pecl
 RUN pecl install apcu-5.1.7 && docker-php-ext-enable apcu

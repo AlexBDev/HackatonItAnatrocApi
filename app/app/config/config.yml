@@ -10,7 +10,7 @@ parameters:
 
 framework:
     #esi: ~
-    #translator: { fallbacks: ['%locale%'] }
+    translator: { fallbacks: ['%locale%'] }
     secret: '%secret%'
     router:
         resource: '%kernel.project_dir%/app/config/routing.yml'
@@ -39,26 +39,26 @@ twig:
     strict_variables: '%kernel.debug%'
 
 # Doctrine Configuration
-#doctrine:
-#    dbal:
-#        driver: pdo_mysql
-#        host: '%database_host%'
-#        port: '%database_port%'
-#        dbname: '%database_name%'
-#        user: '%database_user%'
-#        password: '%database_password%'
-#        charset: UTF8
-        # if using pdo_sqlite as your database driver:
-        #   1. add the path in parameters.yml
-        #     e.g. database_path: "%kernel.project_dir%/var/data/data.sqlite"
-        #   2. Uncomment database_path in parameters.yml.dist
-        #   3. Uncomment next line:
-        #path: '%database_path%'
+doctrine:
+    dbal:
+        driver: pdo_mysql
+        host: '%database_host%'
+        port: '%database_port%'
+        dbname: '%database_name%'
+        user: '%database_user%'
+        password: '%database_password%'
+        charset: UTF8
+#         if using pdo_sqlite as your database driver:
+#           1. add the path in parameters.yml
+#             e.g. database_path: "%kernel.project_dir%/var/data/data.sqlite"
+#           2. Uncomment database_path in parameters.yml.dist
+#           3. Uncomment next line:
+#        path: '%database_path%'
 
-#    orm:
-#        auto_generate_proxy_classes: '%kernel.debug%'
-#        naming_strategy: doctrine.orm.naming_strategy.underscore
-#        auto_mapping: true
+    orm:
+        auto_generate_proxy_classes: '%kernel.debug%'
+        naming_strategy: doctrine.orm.naming_strategy.underscore
+        auto_mapping: true
 
 # Swiftmailer Configuration
 swiftmailer:
@@ -67,3 +67,29 @@ swiftmailer:
     username: '%mailer_user%'
     password: '%mailer_password%'
     spool: { type: memory }
+
+hwi_oauth:
+    # list of names of the firewalls in which this bundle is active, this setting MUST be set
+    firewall_names: [main]
+    resource_owners:
+        google:
+            type:                google
+            client_id:           '%oauth.google_id%'
+            client_secret:       '%oauth.google_secret%'
+            scope:               "email profile"
+        facebook:
+            type:                facebook
+            client_id:           '%oauth.facebook_id%'
+            client_secret:       '%oauth.facebook_secret%'
+            scope: "public_profile email"
+            options:
+                display: popup #dialog is optimized for popup window
+                auth_type: rerequest # Re-asking for Declined Permissions
+
+fos_user:
+    db_driver: orm # other valid values are 'mongodb' and 'couchdb'
+    firewall_name: api
+    user_class: AppBundle\Entity\User
+    from_email:
+        address: toto@poop.com
+        sender_name: Toto
