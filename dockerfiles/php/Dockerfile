@@ -30,7 +30,8 @@ RUN docker-php-ext-install -j$(nproc) \
         pcntl \
         phar \
         simplexml \
-        zip
+        zip \
+        pdo_mysql
 
 RUN pecl channel-update pecl
 RUN pecl install apcu-5.1.7 && docker-php-ext-enable apcu
@@ -57,4 +58,7 @@ RUN echo "alias sf='php bin/console'\n"  >> /home/$user/.bashrc
 
 WORKDIR /usr/share/nginx/html
 
-CMD composer install -n && php-fpm
+CMD php bin/console doctrine:database:create --if-not-exists \
+    && php bin/console doctrine:schema:update --complete --force --dump-sql \
+    && composer install -n \
+    && php-fpm

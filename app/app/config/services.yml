@@ -51,3 +51,13 @@ services:
 
     AppBundle\Api\Weather\WeatherInfoClimat:
       public: true
+
+    AppBundle\OAuth\UserProvider:
+        public: true
+        tag: 'app.oauth.user_provider'
+        arguments:
+            $properties: []
+
+    AppBundle\Security\SecurityLoginHandler:
+        public: true
+        tag: app.security.login_handler
