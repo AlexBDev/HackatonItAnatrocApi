@@ -39,9 +39,17 @@ class DefaultController extends Controller
         $lngTo          = $request->request->get("lngTo");
         if(is_null($addressFrom) || is_null($addressTo))
         {
-            throw new \LogicException("Wrong address given!"); // FIXME --> Renvoyer un code d'erreur à la place d'une exception
+            $msg = array("message" => "Params addressFrom and addressTo must be set");
+            return new JsonResponse(
+                json_encode($msg),
+                500,
+                [],
+                true
+            );
         }
 
+        $locFrom = $locTo = null;
+        // Si la latitude et la longitude ne sont pas passées en param on les récupère
         if (is_null($latFrom) || is_null($latFrom)){
             $locFrom = Utils\LocalisationUtils::getCoordonateByAddress($addressFrom);
         } else {
@@ -62,9 +70,19 @@ class DefaultController extends Controller
 
         foreach ($services as $service) {
             if ($service instanceof GoogleDirection) {
-                $directionWalk  = $this->get(GoogleDirection::class)->getDirection($from, $to, "walking");
-                $directionBike  = $this->get(GoogleDirection::class)->getDirection($from, $to, "bicycling");
-                $directionDrive = $this->get(GoogleDirection::class)->getDirection($from, $to, "driving");
+                $directionWalk  = $this->get(GoogleDirection::class)->getDirection($addressFrom, $addressTo, "walking");
+                $directionBike  = $this->get(GoogleDirection::class)->getDirection($addressFrom, $addressTo, "bicycling");
+                $directionDrive = $this->get(GoogleDirection::class)->getDirection($addressFrom, $addressTo, "driving");
+
+                if (is_null($directionWalk) && is_null($directionBike) && is_null($directionDrive)){
+                    $msg = array("message" => "No response from the nav API");
+                    return new JsonResponse(
+                        json_encode($msg),
+                        404,
+                        [],
+                        true
+                    );
+                }
 
                 $apiData->addData($directionWalk);
                 $apiData->addData($directionBike);
@@ -80,6 +98,16 @@ class DefaultController extends Controller
                 $nearFrom['arret']->setType("transport.velov.nearFrom");
                 $nearTo['arret']->setType("transport.velov.nearTo");
 
+                if (is_null($nearFrom) && is_null($nearTo)){
+                    $msg = array("message" => "No response from the bicycles API");
+                    return new JsonResponse(
+                        json_encode($msg),
+                        404,
+                        [],
+                        true
+                    );
+                }
+
                 $apiData->addData($nearFrom);
                 $apiData->addData($nearTo);
 
@@ -92,6 +120,17 @@ class DefaultController extends Controller
                 $weatherTo   = $this->get(WeatherInfoClimat::class)->getWeather($locTo);
                 $weatherFrom->setType("weatherFrom");
                 $weatherFrom->setType("weatherTo");
+
+                if (is_null($weatherFrom) && is_null($weatherFrom)){
+                    $msg = array("message" => "No response from the weather API");
+                    return new JsonResponse(
+                        json_encode($msg),
+                        404,
+                        [],
+                        true
+                    );
+                }
+
                 $apiData->addData($weatherFrom);
                 $apiData->addData($weatherTo);
             }
