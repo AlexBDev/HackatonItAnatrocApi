@@ -13,7 +13,6 @@ use AppBundle\Model\UserToken;
 use AppBundle\Resolver\ApiServiceResolver;
 use JMS\Serializer\SerializerBuilder;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Model\Velov\VelovParc;
