@@ -111,13 +111,11 @@ class GoogleDirection extends AbstractApi implements ApiKeywordInterface
 
     public function getDirection(RequestLocalisation $localisation, $transportMode)
     {
-        // @todo Wait for input user feature to pass location
         $parameters = [
             'origin' => $localisation->getAddressFrom(),
             'destination' => $localisation->getAddressTo()
         ];
 
-        // @todo Refactor later need to push for the moment
         $parameters['units'] = 'metric';
         $parameters['mode'] = $transportMode;
         $parameters['key'] = $this->getParameters()['key'];

@@ -39,6 +39,19 @@ abstract class AbstractApiData
     }
 
     /**
+     * @param array $errors
+     * @return $this
+     */
+    public function addErrors(array $errors)
+    {
+        foreach ($errors as $error) {
+            $this->errors[] = $error;
+        }
+
+        return $this;
+    }
+
+    /**
      * @return array|AbstractApiData
      */
     public function getData()

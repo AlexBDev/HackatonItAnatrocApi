@@ -4,10 +4,15 @@ namespace AppBundle\Controller;
 
 use AppBundle\Api\Weather\WeatherInfoClimat;
 use AppBundle\Api\Transport\GoogleDirection;
+use AppBundle\Collector\ApiExceptionCollector;
 use AppBundle\Entity\Favorite;
 use AppBundle\Entity\User;
+use AppBundle\Handler\ApiExceptionHandler;
+use AppBundle\Handler\ApiHandlerExecption;
 use AppBundle\Model\Localisation;
 use AppBundle\Model\RequestLocalisation;
+use AppBundle\Model\Weather\WeatherData;
+use AppBundle\Provider\RequestLocationProvider;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use AppBundle\Model\ApiData;
 use AppBundle\Model\UserToken;
@@ -28,33 +33,26 @@ class DefaultController extends BaseController
      * @Route("/", name="homepage")
      *
      */
-    public function indexAction(Request $request, RequestLocalisation $localisation)
+    public function indexAction(Request $request)
     {
-        // Simulation of user input to retrieve related services from his keywords
-        $services = $this->get(ApiServiceResolver::class)->resolveByApiKeyWords(['metro', 'meteo', 'slip', 'bike']);
-
         $apiData = new ApiData();
         $apiData->setType(self::API_DATA_TYPE);
 
+        $exceptionHandler = $this->get(ApiExceptionHandler::class);
+        $localisation = $this->get(RequestLocationProvider::class)->getRequestLocation();
         $positionFrom = $localisation->getPositionFrom();
         $positionTo = $localisation->getPositionTo();
+        $container = $this->container;
 
+        $services = $this->get(ApiServiceResolver::class)->resolveByApiKeyWords(['metro', 'meteo', 'slip', 'bike']);
         foreach ($services as $service) {
             if ($service instanceof GoogleDirection) {
-                $directions = $this->get(GoogleDirection::class)->getDirections(
-                    $localisation,
-                    GoogleDirection::getTransportModes()
-                );
-
-                if (empty($directions)){
-                    $msg = array("message" => "No response from the nav API");
-                    return new JsonResponse(
-                        json_encode($msg),
-                        404,
-                        [],
-                        true
+                $directions = $exceptionHandler->handle(function () use ($container, $localisation) {
+                    return $this->get(GoogleDirection::class)->getDirections(
+                        $localisation,
+                        GoogleDirection::getTransportModes()
                     );
-                }
+                });
 
                 foreach ($directions as $direction) {
                     $apiData->addData($direction);
@@ -65,59 +63,54 @@ class DefaultController extends BaseController
                 //Define an array of VelovArret object
                 $data = $this->get(Velov::class)->setVelovParc();
                 //Return the formated data array
-                $nearFrom = VelovParc::getNearStop($data, $positionFrom);
-                $nearTo   = VelovParc::getNearStop($data, $positionTo);
+                $nearFrom = $exceptionHandler->handle(function () use ($data, $positionFrom) {
 
-                if (is_null($nearFrom) && is_null($nearTo)){
-                    $msg = array("message" => "No response from the bicycles API");
-                    return new JsonResponse(
-                        json_encode($msg),
-                        404,
-                        [],
-                        true
-                    );
+                    return VelovParc::getNearStop($data, $positionFrom);
+                });
+
+                $nearTo = $exceptionHandler->handle(function () use ($data, $positionTo) {
+                    return VelovParc::getNearStop($data, $positionTo);
+                });
+
+                if (is_array($nearFrom)) {
+                    $apiData->addData([
+                        "type" => "transport.velov.nearFrom",
+                        "data" => $nearFrom,
+                    ]);
                 }
 
-                $nearFromDatas = array(
-                    "type" => "transport.velov.nearFrom",
-                    "data" => array()
-                );
-                $nearToDatas   = array(
-                    "type" => "transport.velov.nearTo",
-                    "data" => array()
-                );
-                array_push($nearFromDatas['data'], $nearFrom);
-                array_push($nearToDatas['data'], $nearTo);
-
-                $apiData->addData($nearFromDatas);
-                $apiData->addData($nearToDatas);
-
+                if (is_array($nearTo)) {
+                    $apiData->addData([
+                        "type" => "transport.velov.nearTo",
+                        "data" => $nearTo,
+                    ]);
+                }
             }
 
             if ($service instanceof WeatherInfoClimat) {
+                $weatherInfo = $this->get(WeatherInfoClimat::class);
 
-                //Define an array of WeatherInfoClimat object
-                $weatherFrom = $this->get(WeatherInfoClimat::class)->getWeather($positionFrom);
-                $weatherTo   = $this->get(WeatherInfoClimat::class)->getWeather($positionTo);
-                $weatherFrom->setType("weatherFrom");
-                $weatherTo->setType("weatherTo");
+                $weatherFrom = $exceptionHandler->handle(function () use ($weatherInfo, $positionFrom) {
+                    return $weatherInfo->getWeather($positionFrom);
+                });
 
-                if (is_null($weatherFrom) && is_null($weatherFrom)){
-                    $msg = array("message" => "No response from the weather API");
-                    return new JsonResponse(
-                        json_encode($msg),
-                        404,
-                        [],
-                        true
-                    );
+                $weatherTo = $exceptionHandler->handle(function () use ($weatherInfo, $positionTo) {
+                    return $weatherInfo->getWeather($positionTo);
+                });
+
+                if ($weatherFrom instanceof WeatherData) {
+                    $weatherFrom->setType("weatherFrom");
+                    $apiData->addData($weatherFrom);
                 }
 
-                $apiData->addData($weatherFrom);
-                $apiData->addData($weatherTo);
+                if ($weatherTo instanceof WeatherData) {
+                    $weatherTo->setType("weatherTo");
+                    $apiData->addData($weatherTo);
+                }
             }
         }
 
-        return $this->jsonResponse(
+        return $this->response(
             $apiData,
             [
                 'Access-Control-Allow-Origin' => '*'
@@ -178,7 +171,7 @@ class DefaultController extends BaseController
             $data->addData($favorites);
         }
 
-        return $this->jsonResponse($data);
+        return $this->response($data);
     }
 
     /**
@@ -200,6 +193,6 @@ class DefaultController extends BaseController
             $data->addData($favorites);
         }
 
-        return $this->jsonResponse($data);
+        return $this->response($data);
     }
 }

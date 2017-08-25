@@ -34,11 +34,11 @@ abstract class VelovParc
 
     /**
     * @param array $datas
-    * @param Localisation $loc
+    * @param Localisation $localisation*
     * @return array :
     *      - "distance" : return the distance between out position and the nearest velov stand. ( integer )
     *      - "arret" : return the nearest arret ( object instance )
-    *
+    * @throws \Exception
     *
     * Exemple :
     *
@@ -46,26 +46,28 @@ abstract class VelovParc
     *      dump(VelovParc::getNearArret($data,$localisation));
     *
     */
-    static public function getNearStop( array $datas ,Localisation $loc):array
+    static public function getNearStop( array $datas ,Localisation $localisation):array
     {
         $resultArret = null;
         $distanceResult = null;
         $result = array();
-        foreach ($datas as $data)
-        {
-            if ($data instanceof VelovArret)
-            {
-                if(is_null($distanceResult) || $distanceResult > LocalisationUtils::distance($loc, $data->getLocalisation()))
-                {
+
+        foreach ($datas as $data) {
+            if ($data instanceof VelovArret) {
+                if(is_null($distanceResult)
+                    || $distanceResult > LocalisationUtils::distance($localisation, $data->getLocalisation())
+                ) {
                     $resultArret = $data;
-                    $distanceResult = LocalisationUtils::distance($loc, $data->getLocalisation());
+                    $distanceResult = LocalisationUtils::distance($localisation, $data->getLocalisation());
                 }
             }
         }
 
-        if (is_null($resultArret))
-        {
-            return null;
+        if ($resultArret === null) {
+            throw new \Exception(
+                'Any stop has been found for localisation "'.$localisation->getStringPosition().'""',
+                404
+            );
         }
 
         $result["distance"] = $distanceResult;

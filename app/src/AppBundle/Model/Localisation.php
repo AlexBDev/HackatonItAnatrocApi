@@ -47,4 +47,12 @@ class Localisation
     {
         return $this->lat;
     }
+
+    /**
+     * @return string
+     */
+    public function getStringPosition(): string
+    {
+        return 'lat:'.$this->getLat().',lng:'.$this->getLng();
+    }
 }

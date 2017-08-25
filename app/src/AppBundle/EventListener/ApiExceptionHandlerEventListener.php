@@ -5,7 +5,7 @@ namespace AppBundle\EventListener;
 use AppBundle\Collector\ApiExceptionCollector;
 use AppBundle\Event\ApiExceptionHandlerEvent;
 use AppBundle\Model\ApiData;
-use JMS\Serializer\SerializerBuilder;
+use AppBundle\Response\ApiResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
 
@@ -25,25 +25,16 @@ class ApiExceptionHandlerEventListener
         $this->collector = $collector;
     }
 
+    /**
+     * @param GetResponseForExceptionEvent $event
+     */
     public function onKernelException(GetResponseForExceptionEvent $event)
     {
         $exception = $event->getException();
-        $data = new ApiData();
-        $data->setErrors([$exception->getMessage()]);
         $code = ($exception->getCode() === 0) ? Response::HTTP_INTERNAL_SERVER_ERROR : $exception->getCode();
+        $data = (new ApiData())->setErrors([$exception->getMessage()]);
 
-        $serializer = SerializerBuilder::create()->build();
-        $content = $serializer->serialize($data, 'json');
-
-        $response = new Response(
-            $content,
-            $code,
-            [
-                "ContentType" => "application/json",
-            ]
-        );
-
-        $event->setResponse($response);
+        $event->setResponse(ApiResponse::response($data, [], $code));
     }
 
     /**
@@ -52,6 +43,5 @@ class ApiExceptionHandlerEventListener
     public function onApiException(ApiExceptionHandlerEvent $event)
     {
         $this->collector->addError($event->getException()->getMessage());
-        $event->stopPropagation();
     }
 }
