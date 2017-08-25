@@ -68,3 +68,10 @@ services:
     AppBundle\ArgumentResolver\UserTokenValueResolver:
         tags:
             - { name: controller.argument_value_resolver, priority: 50 }
+
+    AppBundle\Provider\RequestLocationProvider:
+        public: true
+
+    AppBundle\ArgumentResolver\RequestLocalisationValueResolver:
+        tags:
+            - { name: controller.argument_value_resolver, priority: 50 }

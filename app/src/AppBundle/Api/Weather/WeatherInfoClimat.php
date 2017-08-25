@@ -92,6 +92,12 @@ class WeatherInfoClimat extends AbstractWeather
      */
     public function getWeatherByParams($snow, $rain, $convectivRain, $nebulosity, $wind)
     {
+        //@todo need to fix this temporary
+
+        if (is_object($wind)) {
+            $wind = $wind->{"10m"};
+        }
+
         $weather = self::TYPE_SUN;
         if ($snow == 'oui') {
             $weather = self::TYPE_SNOW;

@@ -61,25 +61,18 @@ namespace AppBundle\Utils;
          $resp = json_decode($resp_json, true);
 
          // response status will be 'OK', if able to geocode given address
-         if($resp['status']=='OK'){
-
+         if($resp['status'] === 'OK'){
              // get the important data
              $lati = $resp['results'][0]['geometry']['location']['lat'];
              $longi = $resp['results'][0]['geometry']['location']['lng'];
 
              // verify if data is complete
-             if(!is_null($lati) && !is_null($longi)){
-
-                 $loc = new Localisation($lati,$longi);
-
-                 return $loc;
-             }else{
-                 return false;
+             if($lati !== null && $longi !== null) {
+                 return new Localisation($lati,$longi);
              }
-
-         }else{
-             return false;
          }
+
+         return false;
      }
 
 
