@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 use AppBundle\Api\Weather\WeatherInfoClimat;
 use AppBundle\Api\Transport\GoogleDirection;
 use AppBundle\Model\Localisation;
+use GuzzleHttp\Exception\RequestException;
 use JMS\Serializer\Exception\LogicException;
 use PHPUnit\Runner\Exception;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -38,9 +39,17 @@ class DefaultController extends Controller
         $lngTo          = $request->request->get("lngTo");
         if(is_null($addressFrom) || is_null($addressTo))
         {
-            throw new \LogicException("Wrong address given!"); // FIXME --> Renvoyer un code d'erreur à la place d'une exception
+            $msg = array("message" => "Params addressFrom and addressTo must be set");
+            return new JsonResponse(
+                json_encode($msg),
+                500,
+                [],
+                true
+            );
         }
 
+        $locFrom = $locTo = null;
+        // Si la latitude et la longitude ne sont pas passées en param on les récupère
         if (is_null($latFrom) || is_null($latFrom)){
             $locFrom = Utils\LocalisationUtils::getCoordonateByAddress($addressFrom);
         } else {
@@ -65,6 +74,16 @@ class DefaultController extends Controller
                 $directionBike  = $this->get(GoogleDirection::class)->getDirection($addressFrom, $addressTo, "bicycling");
                 $directionDrive = $this->get(GoogleDirection::class)->getDirection($addressFrom, $addressTo, "driving");
 
+                if (is_null($directionWalk) && is_null($directionBike) && is_null($directionDrive)){
+                    $msg = array("message" => "No response from the nav API");
+                    return new JsonResponse(
+                        json_encode($msg),
+                        404,
+                        [],
+                        true
+                    );
+                }
+
                 $apiData->addData($directionWalk);
                 $apiData->addData($directionBike);
                 $apiData->addData($directionDrive);
@@ -76,6 +95,16 @@ class DefaultController extends Controller
                 //Return the formated data array
                 $nearFrom = VelovParc::getNearStop($data, $locFrom);
                 $nearTo   = VelovParc::getNearStop($data, $locTo);
+
+                if (is_null($nearFrom) && is_null($nearTo)){
+                    $msg = array("message" => "No response from the bicycles API");
+                    return new JsonResponse(
+                        json_encode($msg),
+                        404,
+                        [],
+                        true
+                    );
+                }
 
                 $nearFromDatas = array(
                     "type" => "transport.velov.nearFrom",
@@ -100,6 +129,16 @@ class DefaultController extends Controller
                 $weatherTo   = $this->get(WeatherInfoClimat::class)->getWeather($locTo);
                 $weatherFrom->setType("weatherFrom");
                 $weatherTo->setType("weatherTo");
+
+                if (is_null($weatherFrom) && is_null($weatherFrom)){
+                    $msg = array("message" => "No response from the weather API");
+                    return new JsonResponse(
+                        json_encode($msg),
+                        404,
+                        [],
+                        true
+                    );
+                }
 
                 $apiData->addData($weatherFrom);
                 $apiData->addData($weatherTo);
@@ -134,4 +173,23 @@ class DefaultController extends Controller
 
         return new JsonResponse($jsonContent, 200, [], true);
     }
+
+    /**
+     * Intercept all 404 error and return a 404 json error
+     *
+     * @Route("/{slug}", name="notFound", requirements={"slug" = "[[:graph:][:punct:]àéèêîçùµ]*"})
+     *
+     */
+    public function notFoundAction(Request $request, $slug)
+    {
+        return new JsonResponse(
+            "Page not found",
+            404,
+            [
+                'Access-Control-Allow-Origin' => '*'
+            ],
+            true
+        );
+    }
+
 }

@@ -62,20 +62,15 @@ abstract class VelovParc
                 }
             }
         }
-        if(is_null($resultArret))
+
+        if (is_null($resultArret))
         {
-            throw new \LogicException("Can't found any array of stand !");
+            return null;
         }
-        try
-        {
-            $result["distance"] = $distanceResult;
-            $result["arret"] = $resultArret;
-        }
-        catch(\Exception $e)
-        {
-            dump($e);
-            die;
-        }
+
+        $result["distance"] = $distanceResult;
+        $result["arret"] = $resultArret;
+
         return $result;
     }
 }
