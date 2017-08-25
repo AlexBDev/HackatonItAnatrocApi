@@ -88,7 +88,7 @@ class GoogleDirection extends AbstractApi implements ApiKeywordInterface
         // @todo Wait for input user feature to pass location
         $parameters = [
             'origin' => $localisation->getAddressFrom(),
-            'destination' => $localisation->getAddressFrom()
+            'destination' => $localisation->getAddressTo()
         ];
 
         // @todo Refactor later need to push for the moment
