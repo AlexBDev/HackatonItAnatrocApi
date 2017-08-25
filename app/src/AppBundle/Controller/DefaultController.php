@@ -41,7 +41,10 @@ class DefaultController extends BaseController
 
         foreach ($services as $service) {
             if ($service instanceof GoogleDirection) {
-                $directions = $this->get(GoogleDirection::class)->getDirections($localisation, ["walking", "bicycling", "driving"]);
+                $directions = $this->get(GoogleDirection::class)->getDirections(
+                    $localisation,
+                    GoogleDirection::getTransportModes()
+                );
 
                 if (empty($directions)){
                     $msg = array("message" => "No response from the nav API");

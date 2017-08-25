@@ -29,6 +29,10 @@ class GoogleDirection extends AbstractApi implements ApiKeywordInterface
      */
     const API_DATA_TYPE = 'transport.google_direction';
 
+    const MODE_DRIVING = 'driving';
+    const MODE_WALKING = 'walking';
+    const MODE_BICYCLING = 'bicycling';
+
     /**
      * @var string
      */
@@ -81,6 +85,18 @@ class GoogleDirection extends AbstractApi implements ApiKeywordInterface
     private function getParameters(): array
     {
         return $this->parameters;
+    }
+
+    /**
+     * @return array
+     */
+    public static function getTransportModes(): array
+    {
+        return [
+            self::MODE_BICYCLING,
+            self::MODE_DRIVING,
+            self::MODE_WALKING,
+        ];
     }
 
     public function getDirections(RequestLocalisation $localisation,  array $transportModes)
