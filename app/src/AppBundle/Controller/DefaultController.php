@@ -19,7 +19,7 @@ use AppBundle\Model\Velov\VelovParc;
 use AppBundle\Service\Velov\Velov;
 use AppBundle\Utils;
 
-class DefaultController extends Controller
+class DefaultController extends BaseController
 {
     const API_DATA_TYPE = 'main';
 
