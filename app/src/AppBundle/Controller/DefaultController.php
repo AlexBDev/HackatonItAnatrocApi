@@ -62,11 +62,11 @@ class DefaultController extends Controller
             $locTo = new Localisation(floatval($latTo),floatval($lngTo) );
         }
 
-            // Simulation of user input to retrieve related services from his keywords
-            $services = $this->get(ApiServiceResolver::class)->resolveByApiKeyWords(['metro', 'meteo', 'slip', 'bike']);
+        // Simulation of user input to retrieve related services from his keywords
+        $services = $this->get(ApiServiceResolver::class)->resolveByApiKeyWords(['metro', 'meteo', 'slip', 'bike']);
 
-            $apiData = new ApiData();
-            $apiData->setType(self::API_DATA_TYPE);
+        $apiData = new ApiData();
+        $apiData->setType(self::API_DATA_TYPE);
 
         foreach ($services as $service) {
             if ($service instanceof GoogleDirection) {
