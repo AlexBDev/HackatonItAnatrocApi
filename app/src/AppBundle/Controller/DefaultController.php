@@ -7,6 +7,7 @@ use AppBundle\Api\Transport\GoogleDirection;
 use AppBundle\Entity\Favorite;
 use AppBundle\Entity\User;
 use AppBundle\Model\Localisation;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use AppBundle\Model\ApiData;
 use AppBundle\Model\UserToken;
 use AppBundle\Resolver\ApiServiceResolver;
@@ -39,9 +40,17 @@ class DefaultController extends BaseController
         $lngTo          = $request->request->get("lngTo");
         if(is_null($addressFrom) || is_null($addressTo))
         {
-            throw new \LogicException("Wrong address given!"); // FIXME --> Renvoyer un code d'erreur à la place d'une exception
+            $msg = array("message" => "Params addressFrom and addressTo must be set");
+            return new JsonResponse(
+                json_encode($msg),
+                500,
+                [],
+                true
+            );
         }
 
+        $locFrom = $locTo = null;
+        // Si la latitude et la longitude ne sont pas passées en param on les récupère
         if (is_null($latFrom) || is_null($latFrom)){
             $locFrom = Utils\LocalisationUtils::getCoordonateByAddress($addressFrom);
         } else {
@@ -66,6 +75,16 @@ class DefaultController extends BaseController
                 $directionBike  = $this->get(GoogleDirection::class)->getDirection($addressFrom, $addressTo, "bicycling");
                 $directionDrive = $this->get(GoogleDirection::class)->getDirection($addressFrom, $addressTo, "driving");
 
+                if (is_null($directionWalk) && is_null($directionBike) && is_null($directionDrive)){
+                    $msg = array("message" => "No response from the nav API");
+                    return new JsonResponse(
+                        json_encode($msg),
+                        404,
+                        [],
+                        true
+                    );
+                }
+
                 $apiData->addData($directionWalk);
                 $apiData->addData($directionBike);
                 $apiData->addData($directionDrive);
@@ -76,12 +95,31 @@ class DefaultController extends BaseController
                 $data = $this->get(Velov::class)->setVelovParc();
                 //Return the formated data array
                 $nearFrom = VelovParc::getNearStop($data, $locFrom);
-                $nearTo = VelovParc::getNearStop($data, $locTo);
-                $nearFrom['arret']->setType("transport.velov.nearFrom");
-                $nearTo['arret']->setType("transport.velov.nearTo");
+                $nearTo   = VelovParc::getNearStop($data, $locTo);
 
-                $apiData->addData($nearFrom);
-                $apiData->addData($nearTo);
+                if (is_null($nearFrom) && is_null($nearTo)){
+                    $msg = array("message" => "No response from the bicycles API");
+                    return new JsonResponse(
+                        json_encode($msg),
+                        404,
+                        [],
+                        true
+                    );
+                }
+
+                $nearFromDatas = array(
+                    "type" => "transport.velov.nearFrom",
+                    "data" => array()
+                );
+                $nearToDatas   = array(
+                    "type" => "transport.velov.nearTo",
+                    "data" => array()
+                );
+                array_push($nearFromDatas['data'], $nearFrom);
+                array_push($nearToDatas['data'], $nearTo);
+
+                $apiData->addData($nearFromDatas);
+                $apiData->addData($nearToDatas);
 
             }
 
@@ -91,7 +129,18 @@ class DefaultController extends BaseController
                 $weatherFrom = $this->get(WeatherInfoClimat::class)->getWeather($locFrom);
                 $weatherTo   = $this->get(WeatherInfoClimat::class)->getWeather($locTo);
                 $weatherFrom->setType("weatherFrom");
-                $weatherFrom->setType("weatherTo");
+                $weatherTo->setType("weatherTo");
+
+                if (is_null($weatherFrom) && is_null($weatherFrom)){
+                    $msg = array("message" => "No response from the weather API");
+                    return new JsonResponse(
+                        json_encode($msg),
+                        404,
+                        [],
+                        true
+                    );
+                }
+
                 $apiData->addData($weatherFrom);
                 $apiData->addData($weatherTo);
             }

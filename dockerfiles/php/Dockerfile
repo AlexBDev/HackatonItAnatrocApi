@@ -58,7 +58,8 @@ RUN echo "alias sf='php bin/console'\n"  >> /home/$user/.bashrc
 
 WORKDIR /usr/share/nginx/html
 
-CMD php bin/console doctrine:database:create --if-not-exists \
+
+CMD composer install -n \
+    && php bin/console doctrine:database:create --if-not-exists \
     && php bin/console doctrine:schema:update --complete --force --dump-sql \
-    && composer install -n \
     && php-fpm

@@ -28,14 +28,10 @@ class WeatherInfoClimat extends AbstractWeather
         $weather = new WeatherData();
 
         $weather->setType($this->getType());
-
         $weather->setTemperature($json->temperature->sol - self::KELVIN_TO_CELSIUS);
-
         $weather->setWindForce($json->vent_moyen->{'10m'});
-
         //$weather->setWindDirection($json->vent_direction->{'10m'});
-
-        $weather->setWeather($this->getWeatherByParams($json->risque_neige,$json->pluie,$json->pluie_convective,$json->nebulosite->totale,$json->vent_moyen));
+        $weather->setWeather($this->getWeatherByParams($json->risque_neige,$json->pluie,floatval($json->pluie_convective),$json->nebulosite->totale,$json->vent_moyen));
 
         return $weather;
     }
@@ -77,15 +73,15 @@ class WeatherInfoClimat extends AbstractWeather
     /**
      * @return \DateTime|null
      */
-    public function getBetterDate($dateavant, $dateapres, $date)
+    public function getBetterDate($dateBefore, $dateAfter, $date)
     {
-        $valeur1 = strtotime($date) - strtotime($dateavant);
-        $valeur2 = strtotime($dateapres) - strtotime($date);
+        $valeur1 = strtotime($date) - strtotime($dateBefore);
+        $valeur2 = strtotime($dateAfter) - strtotime($date);
 
         if ($valeur1 < $valeur2) {
-            $datetrue = $dateavant;
+            $datetrue = $dateBefore;
         } elseif ($valeur1 > $valeur2) {
-            $datetrue = $dateapres;
+            $datetrue = $dateAfter;
         }
 
         return $datetrue;
@@ -94,16 +90,16 @@ class WeatherInfoClimat extends AbstractWeather
     /**
      * @return integer
      */
-    public function getWeatherByParams($neige, $pluie, $pluie_convective, $nebulosite, $vent_moyen)
+    public function getWeatherByParams($snow, $rain, $convectivRain, $nebulosity, $wind)
     {
         $weather = self::TYPE_SUN;
-        if ($neige == 'oui') {
+        if ($snow == 'oui') {
             $weather = self::TYPE_SNOW;
-        } elseif ($pluie_convective > 0 && $vent_moyen > 25) {
+        } elseif ($convectivRain > 0.0 && $wind > 25) {
             $weather = self::TYPE_STORM;
-        } elseif ($pluie > 0) {
+        } elseif ($rain > 0) {
             $weather = self::TYPE_RAIN;
-        } elseif ($nebulosite > 50) {
+        } elseif ($nebulosity > 50) {
             $weather = self::TYPE_CLOUD;
         }
 
