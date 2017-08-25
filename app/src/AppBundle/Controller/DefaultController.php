@@ -41,11 +41,9 @@ class DefaultController extends BaseController
 
         foreach ($services as $service) {
             if ($service instanceof GoogleDirection) {
-                $directionWalk  = $this->get(GoogleDirection::class)->getDirection($localisation, "walking");
-                $directionBike  = $this->get(GoogleDirection::class)->getDirection($localisation, "bicycling");
-                $directionDrive = $this->get(GoogleDirection::class)->getDirection($localisation, "driving");
+                $directions = $this->get(GoogleDirection::class)->getDirections($localisation, ["walking", "bicycling", "driving"]);
 
-                if (is_null($directionWalk) && is_null($directionBike) && is_null($directionDrive)){
+                if (empty($directions)){
                     $msg = array("message" => "No response from the nav API");
                     return new JsonResponse(
                         json_encode($msg),
@@ -55,9 +53,9 @@ class DefaultController extends BaseController
                     );
                 }
 
-                $apiData->addData($directionWalk);
-                $apiData->addData($directionBike);
-                $apiData->addData($directionDrive);
+                foreach ($directions as $direction) {
+                    $apiData->addData($direction);
+                }
             }
 
             if ($service instanceof Velov) {

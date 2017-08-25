@@ -83,6 +83,16 @@ class GoogleDirection extends AbstractApi implements ApiKeywordInterface
         return $this->parameters;
     }
 
+    public function getDirections(RequestLocalisation $localisation,  array $transportModes)
+    {
+        $directions = [];
+        foreach ($transportModes as $mode) {
+            $directions[] = $this->getDirection($localisation, $mode);
+        }
+
+        return $directions;
+    }
+
     public function getDirection(RequestLocalisation $localisation, $transportMode)
     {
         // @todo Wait for input user feature to pass location
@@ -113,7 +123,7 @@ class GoogleDirection extends AbstractApi implements ApiKeywordInterface
         $transport = new TransportData();
         $type = $this->getType().'.'.$transportType;
         $transport->setType($type);
-        
+
         foreach ($object->routes as $record) {
             $legs = $record->legs[0];
             $transport->setDistance($legs->distance->text)
