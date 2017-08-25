@@ -7,13 +7,13 @@ use AppBundle\Api\Transport\GoogleDirection;
 use AppBundle\Entity\Favorite;
 use AppBundle\Entity\User;
 use AppBundle\Model\Localisation;
+use AppBundle\Model\RequestLocalisation;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use AppBundle\Model\ApiData;
 use AppBundle\Model\UserToken;
 use AppBundle\Resolver\ApiServiceResolver;
 use JMS\Serializer\SerializerBuilder;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Model\Velov\VelovParc;
@@ -28,52 +28,22 @@ class DefaultController extends BaseController
      * @Route("/", name="homepage")
      *
      */
-    public function indexAction(Request $request)
+    public function indexAction(Request $request, RequestLocalisation $localisation)
     {
-        // Obligatoire
-        $addressFrom    = $request->request->get("addressFrom");
-        $addressTo      = $request->request->get("addressTo");
-        // Optionnel
-        $latFrom        = $request->request->get("latFrom");
-        $lngFrom        = $request->request->get("lngFrom");
-        $latTo          = $request->request->get("latTo");
-        $lngTo          = $request->request->get("lngTo");
-        if(is_null($addressFrom) || is_null($addressTo))
-        {
-            $msg = array("message" => "Params addressFrom and addressTo must be set");
-            return new JsonResponse(
-                json_encode($msg),
-                500,
-                [],
-                true
-            );
-        }
-
-        $locFrom = $locTo = null;
-        // Si la latitude et la longitude ne sont pas passées en param on les récupère
-        if (is_null($latFrom) || is_null($latFrom)){
-            $locFrom = Utils\LocalisationUtils::getCoordonateByAddress($addressFrom);
-        } else {
-            $locFrom = new Localisation(floatval($latFrom),floatval($lngFrom) );
-        }
-
-        if (is_null($latTo) || is_null($latTo)){
-            $locTo = Utils\LocalisationUtils::getCoordonateByAddress($addressTo);
-        } else {
-            $locTo = new Localisation(floatval($latTo),floatval($lngTo) );
-        }
-
         // Simulation of user input to retrieve related services from his keywords
         $services = $this->get(ApiServiceResolver::class)->resolveByApiKeyWords(['metro', 'meteo', 'slip', 'bike']);
 
         $apiData = new ApiData();
         $apiData->setType(self::API_DATA_TYPE);
 
+        $positionFrom = $localisation->getPositionFrom();
+        $positionTo = $localisation->getPositionTo();
+
         foreach ($services as $service) {
             if ($service instanceof GoogleDirection) {
-                $directionWalk  = $this->get(GoogleDirection::class)->getDirection($addressFrom, $addressTo, "walking");
-                $directionBike  = $this->get(GoogleDirection::class)->getDirection($addressFrom, $addressTo, "bicycling");
-                $directionDrive = $this->get(GoogleDirection::class)->getDirection($addressFrom, $addressTo, "driving");
+                $directionWalk  = $this->get(GoogleDirection::class)->getDirection($localisation, "walking");
+                $directionBike  = $this->get(GoogleDirection::class)->getDirection($localisation, "bicycling");
+                $directionDrive = $this->get(GoogleDirection::class)->getDirection($localisation, "driving");
 
                 if (is_null($directionWalk) && is_null($directionBike) && is_null($directionDrive)){
                     $msg = array("message" => "No response from the nav API");
@@ -94,8 +64,8 @@ class DefaultController extends BaseController
                 //Define an array of VelovArret object
                 $data = $this->get(Velov::class)->setVelovParc();
                 //Return the formated data array
-                $nearFrom = VelovParc::getNearStop($data, $locFrom);
-                $nearTo   = VelovParc::getNearStop($data, $locTo);
+                $nearFrom = VelovParc::getNearStop($data, $positionFrom);
+                $nearTo   = VelovParc::getNearStop($data, $positionTo);
 
                 if (is_null($nearFrom) && is_null($nearTo)){
                     $msg = array("message" => "No response from the bicycles API");
@@ -126,8 +96,8 @@ class DefaultController extends BaseController
             if ($service instanceof WeatherInfoClimat) {
 
                 //Define an array of WeatherInfoClimat object
-                $weatherFrom = $this->get(WeatherInfoClimat::class)->getWeather($locFrom);
-                $weatherTo   = $this->get(WeatherInfoClimat::class)->getWeather($locTo);
+                $weatherFrom = $this->get(WeatherInfoClimat::class)->getWeather($positionFrom);
+                $weatherTo   = $this->get(WeatherInfoClimat::class)->getWeather($positionTo);
                 $weatherFrom->setType("weatherFrom");
                 $weatherTo->setType("weatherTo");
 
@@ -146,16 +116,12 @@ class DefaultController extends BaseController
             }
         }
 
-        $serializer = SerializerBuilder::create()->build();
-        $jsonContent = $serializer->serialize($apiData, 'json');
-
-        return new JsonResponse(
-            $jsonContent,
-            200,
+        return $this->jsonResponse(
+            $apiData,
             [
                 'Access-Control-Allow-Origin' => '*'
             ],
-            true
+            200
         );
     }
 

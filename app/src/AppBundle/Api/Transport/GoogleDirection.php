@@ -12,6 +12,7 @@ namespace AppBundle\Api\Transport;
 use AppBundle\Api\AbstractApi;
 use AppBundle\Api\ApiKeywordInterface;
 use AppBundle\Model\Localisation;
+use AppBundle\Model\RequestLocalisation;
 use AppBundle\Model\Transport\TransportData;
 use GuzzleHttp\Client;
 
@@ -50,7 +51,7 @@ class GoogleDirection extends AbstractApi implements ApiKeywordInterface
     public function __construct(array $parameters)
     {
         $this->parameters = $parameters['google_direction'];
-        $this->guzzle = new Client(['connect_timeout' => 3]);
+        $this->guzzle = new Client(['connect_timeout' => 10]);
     }
 
     /**
@@ -82,12 +83,12 @@ class GoogleDirection extends AbstractApi implements ApiKeywordInterface
         return $this->parameters;
     }
 
-    public function getDirection($from, $to, $transportMode)
+    public function getDirection(RequestLocalisation $localisation, $transportMode)
     {
         // @todo Wait for input user feature to pass location
         $parameters = [
-            'origin' => $from,
-            'destination' => $to
+            'origin' => $localisation->getAddressFrom(),
+            'destination' => $localisation->getAddressFrom()
         ];
 
         // @todo Refactor later need to push for the moment
@@ -98,6 +99,7 @@ class GoogleDirection extends AbstractApi implements ApiKeywordInterface
         $query = \GuzzleHttp\Psr7\build_query($parameters);
         $url = $this->getParameters()['url'].'json?'.$query;
         $response = $this->getGuzzle()->get($url);
+
         $content = $response->getBody()->getContents();
 
         $object = \GuzzleHttp\json_decode($content);
