@@ -4,14 +4,14 @@ namespace AppBundle\Controller;
 
 use AppBundle\Api\Weather\WeatherInfoClimat;
 use AppBundle\Api\Transport\GoogleDirection;
+use AppBundle\Entity\Favorite;
+use AppBundle\Entity\User;
 use AppBundle\Model\Localisation;
-use JMS\Serializer\Exception\LogicException;
-use PHPUnit\Runner\Exception;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use AppBundle\Model\ApiData;
 use AppBundle\Resolver\ApiServiceResolver;
 use JMS\Serializer\SerializerBuilder;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use AppBundle\Model\Velov\VelovParc;
@@ -123,5 +123,73 @@ class DefaultController extends BaseController
         $jsonContent = $serializer->serialize($data, 'json');
 
         return new JsonResponse($jsonContent, 200, [], true);
+    }
+
+    /**
+     * @Method("POST")
+     * @Route("/favorite/add", name="favorite_add")
+     */
+    public function favoritePostAction(Request $request)
+    {
+        $data = (new ApiData())
+            ->setType('favorite');
+
+        $token = $request->request->get('token');
+        $doctrine = $this->getDoctrine();
+        $user = $doctrine->getRepository(User::class)
+            ->findByApiKey($token);
+
+        if (empty($user)) {
+            $data->setErrors(['Unable to found user from apiKey']);
+        } else {
+            $address = $request->request->get('address');
+            $description = $request->request->get('description');
+            $favorite = (new Favorite())
+                ->setUser(current($user))
+                ->setAddress($address)
+                ->setDescription($description);
+
+            $manager = $doctrine->getManager();
+            $manager->persist($favorite);
+
+            try {
+                $manager->flush();
+            } catch (\Exception $e) {
+                $data->setErrors(['Unable to persist favorite']);
+            }
+
+            $favorites = $doctrine->getRepository(Favorite::class)
+                ->findByUser($user);
+
+            $data->addData($favorites);
+        }
+
+        return $this->jsonResponse($data);
+    }
+
+    /**
+     * @Method("GET")
+     * @Route("/favorites", name="favorites_list")
+     */
+    public function favoriteGetAction(Request $request)
+    {
+        $data = (new ApiData())
+            ->setType('favorite');
+
+        $token = $request->query->get('token');
+        $doctrine = $this->getDoctrine();
+        $user = $doctrine->getRepository(User::class)
+            ->findByApiKey($token);
+
+        if (empty($user)) {
+            $data->setErrors(['Unable to found user from apiKey']);
+        } else {
+            $favorites = $doctrine->getRepository(Favorite::class)
+                ->findByUser($user);
+
+            $data->addData($favorites);
+        }
+
+        return $this->jsonResponse($data);
     }
 }
