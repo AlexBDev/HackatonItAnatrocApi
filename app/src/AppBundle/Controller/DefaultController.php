@@ -8,6 +8,7 @@ use AppBundle\Entity\Favorite;
 use AppBundle\Entity\User;
 use AppBundle\Model\Localisation;
 use AppBundle\Model\ApiData;
+use AppBundle\Model\UserToken;
 use AppBundle\Resolver\ApiServiceResolver;
 use JMS\Serializer\SerializerBuilder;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -129,15 +130,11 @@ class DefaultController extends BaseController
      * @Method("POST")
      * @Route("/favorite/add", name="favorite_add")
      */
-    public function favoritePostAction(Request $request)
+    public function favoritePostAction(Request $request, UserToken $userToken)
     {
+        $user = $userToken->getUser();
         $data = (new ApiData())
             ->setType('favorite');
-
-        $token = $request->request->get('token');
-        $doctrine = $this->getDoctrine();
-        $user = $doctrine->getRepository(User::class)
-            ->findByApiKey($token);
 
         if (empty($user)) {
             $data->setErrors(['Unable to found user from apiKey']);
@@ -145,10 +142,11 @@ class DefaultController extends BaseController
             $address = $request->request->get('address');
             $description = $request->request->get('description');
             $favorite = (new Favorite())
-                ->setUser(current($user))
+                ->setUser($user)
                 ->setAddress($address)
                 ->setDescription($description);
 
+            $doctrine = $this->getDoctrine();
             $manager = $doctrine->getManager();
             $manager->persist($favorite);
 
@@ -171,20 +169,16 @@ class DefaultController extends BaseController
      * @Method("GET")
      * @Route("/favorites", name="favorites_list")
      */
-    public function favoriteGetAction(Request $request)
+    public function favoriteGetAction(UserToken $userToken)
     {
+        $user = $userToken->getUser();
         $data = (new ApiData())
             ->setType('favorite');
-
-        $token = $request->query->get('token');
-        $doctrine = $this->getDoctrine();
-        $user = $doctrine->getRepository(User::class)
-            ->findByApiKey($token);
 
         if (empty($user)) {
             $data->setErrors(['Unable to found user from apiKey']);
         } else {
-            $favorites = $doctrine->getRepository(Favorite::class)
+            $favorites = $this->getDoctrine()->getRepository(Favorite::class)
                 ->findByUser($user);
 
             $data->addData($favorites);

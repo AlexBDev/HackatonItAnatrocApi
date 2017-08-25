@@ -61,3 +61,10 @@ services:
     AppBundle\Security\SecurityLoginHandler:
         public: true
         tag: app.security.login_handler
+
+    AppBundle\Provider\UserTokenProvider:
+        public: true
+
+    AppBundle\ArgumentResolver\UserTokenValueResolver:
+        tags:
+            - { name: controller.argument_value_resolver, priority: 50 }
