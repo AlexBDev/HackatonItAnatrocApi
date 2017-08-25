@@ -174,8 +174,6 @@ class DefaultController extends Controller
         return new JsonResponse($jsonContent, 200, [], true);
     }
 
-
-
     /**
      * Intercept all 404 error and return a 404 json error
      *
