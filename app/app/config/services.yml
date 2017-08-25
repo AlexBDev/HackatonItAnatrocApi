@@ -75,3 +75,22 @@ services:
     AppBundle\ArgumentResolver\RequestLocalisationValueResolver:
         tags:
             - { name: controller.argument_value_resolver, priority: 50 }
+
+    AppBundle\Handler\ApiExceptionHandler:
+        arguments:
+            $disabled: '%disable_api_exception_handler%'
+        public: true
+
+    AppBundle\Collector\ApiExceptionCollector:
+        public: true
+
+    AppBundle\EventListener\ApiExceptionHandlerEventListener:
+        tags:
+            -
+                name: kernel.event_listener
+                event: !php/const:Symfony\Component\HttpKernel\KernelEvents::EXCEPTION
+                method: onKernelException
+            -
+                name: kernel.event_listener
+                event: !php/const:AppBundle\AppEvents::API_CATCH_EXCEPTION
+                method: onApiException

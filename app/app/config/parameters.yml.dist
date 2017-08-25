@@ -22,3 +22,4 @@ parameters:
     oauth.google_secret: 'setakey'
     oauth.facebook_id: 'setakey'
     oauth.facebook_secret: 'setakey'
+    disable_api_exception_handler: false
