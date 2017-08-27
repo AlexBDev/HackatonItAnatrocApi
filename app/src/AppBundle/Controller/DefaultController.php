@@ -178,7 +178,7 @@ class DefaultController extends BaseController
      * @Method("GET")
      * @Route("/user/favorites", name="favorite_list")
      */
-    public function favoriteGetAction(UserToken $userToken)
+    public function favoritesAction(UserToken $userToken)
     {
         $user = $userToken->getUser();
         $data = (new ApiData())
@@ -194,5 +194,38 @@ class DefaultController extends BaseController
         }
 
         return $this->response($data);
+    }
+
+    /**
+     * @Method("GET")
+     * @Route("/user/info", name="user_info")
+     */
+    public function userInfoAction(UserToken $userToken)
+    {
+        $user = $userToken->getUser();
+        $data = (new ApiData())
+            ->setType('user_info');
+
+        if (empty($user)) {
+            $data->setErrors(['Unable to found user from apiKey']);
+        } else {
+            $data->addData($user);
+        }
+
+        return $this->response($data);
+    }
+
+    /**
+     * @Method("GET")
+     * @Route("/token/verify", name="token_verify")
+     */
+    public function verifyToken(UserToken $userToken)
+    {
+        $exists = false;
+        if ($userToken->getUser() !== null) {
+            $exists = true;
+        }
+
+        return $this->response((new ApiData())->setData($exists));
     }
 }
