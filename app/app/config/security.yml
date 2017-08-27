@@ -7,24 +7,16 @@ security:
         ROLE_SUPER_ADMIN: ROLE_ADMIN
 
     providers:
-        fos_userbundle:
-            id: fos_user.user_provider.username
+        api_key_user_provider:
+            id: AppBundle\Security\UserProvider
 
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
         main:
-            pattern: ^/
-            logout:       true
-            anonymous:    true
-            oauth:
-                resource_owners:
-                    google:             "/login/check-google"
-                    facebook:             "/login/check-facebook"
-                login_path:        /login
-                use_forward:       false
-                failure_path:      /login
-                success_handler: AppBundle\Security\SecurityLoginHandler
-                oauth_user_provider:
-                    service: AppBundle\OAuth\UserProvider
+            pattern: ^/user
+            provider: api_key_user_provider
+            stateless: false
+            simple_preauth:
+                authenticator: AppBundle\Security\ApiKeyAuthenticator

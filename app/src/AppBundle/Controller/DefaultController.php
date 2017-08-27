@@ -137,7 +137,7 @@ class DefaultController extends BaseController
 
     /**
      * @Method("POST")
-     * @Route("/favorite/add", name="favorite_add")
+     * @Route("/user/favorite", name="favorite_add")
      */
     public function favoritePostAction(Request $request, UserToken $userToken)
     {
@@ -176,7 +176,7 @@ class DefaultController extends BaseController
 
     /**
      * @Method("GET")
-     * @Route("/favorites", name="favorites_list")
+     * @Route("/user/favorites", name="favorite_list")
      */
     public function favoriteGetAction(UserToken $userToken)
     {

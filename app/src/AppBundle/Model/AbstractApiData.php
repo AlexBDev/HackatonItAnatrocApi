@@ -39,6 +39,17 @@ abstract class AbstractApiData
     }
 
     /**
+     * @param string $error
+     * @return $this
+     */
+    public function addError(string $error)
+    {
+        $this->addErrors([$error]);
+
+        return $this;
+    }
+
+    /**
      * @param array $errors
      * @return $this
      */
@@ -66,13 +77,9 @@ abstract class AbstractApiData
      */
     public function setData($data): AbstractApiData
     {
-        if (is_array($data) || $data instanceof AbstractApiData) {
-            $this->data = $data;
+        $this->data = $data;
 
-            return $this;
-        }
-
-        throw new \UnexpectedValueException();
+        return $this;
     }
 
     /**

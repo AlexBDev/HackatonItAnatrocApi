@@ -17,12 +17,24 @@ class ApiExceptionHandlerEventListener
     private $collector;
 
     /**
+     * @var bool
+     */
+    private $handlingGeneralException;
+
+    /**
+     * @var bool
+     */
+    private $isDev;
+
+    /**
      * ApiExceptionHandlerEventListener constructor.
      * @param ApiExceptionCollector $collector
      */
-    public function __construct(ApiExceptionCollector $collector)
+    public function __construct(ApiExceptionCollector $collector, bool $isDev, bool $handlingGeneralException)
     {
         $this->collector = $collector;
+        $this->handlingGeneralException = $handlingGeneralException;
+        $this->isDev = $isDev;
     }
 
     /**
@@ -30,11 +42,13 @@ class ApiExceptionHandlerEventListener
      */
     public function onKernelException(GetResponseForExceptionEvent $event)
     {
-        $exception = $event->getException();
-        $code = ($exception->getCode() === 0) ? Response::HTTP_INTERNAL_SERVER_ERROR : $exception->getCode();
-        $data = (new ApiData())->setErrors([$exception->getMessage()]);
+        if (!$this->isDev || $this->handlingGeneralException) {
+            $exception = $event->getException();
+            $code = ($exception->getCode() === 0) ? Response::HTTP_INTERNAL_SERVER_ERROR : $exception->getCode();
+            $data = (new ApiData())->setErrors([$exception->getMessage()]);
 
-        $event->setResponse(ApiResponse::response($data, [], $code));
+            $event->setResponse(ApiResponse::response($data, [], $code));
+        }
     }
 
     /**
