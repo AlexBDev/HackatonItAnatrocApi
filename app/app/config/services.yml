@@ -10,26 +10,15 @@ parameters:
             url: "https://maps.googleapis.com/maps/api/directions/"
             key: "%google_api_key.direction%"
 services:
-    # default configuration for services in *this* file
     _defaults:
-        # automatically injects dependencies in your services
         autowire: true
-        # automatically registers your services as commands, event subscribers, etc.
         autoconfigure: true
-        # this means you cannot fetch services directly from the container via $container->get()
-        # if you need to do this, you can override this setting on individual services
         public: false
 
-    # makes classes in src/AppBundle available to be used as services
-    # this creates a service per class whose id is the fully-qualified class name
     AppBundle\:
         resource: '../../src/AppBundle/*'
-        # you can exclude directories or files
-        # but if a service is unused, it's removed anyway
         exclude: '../../src/AppBundle/{Entity,Repository,Tests,Model}'
 
-    # controllers are imported separately to make sure they're public
-    # and have a tag that allows actions to type-hint services
     AppBundle\Controller\:
         resource: '../../src/AppBundle/Controller'
         public: true
@@ -52,15 +41,11 @@ services:
     AppBundle\Api\Weather\WeatherInfoClimat:
       public: true
 
-    AppBundle\OAuth\UserProvider:
+    AppBundle\Security\UserProvider:
         public: true
-        tag: 'app.oauth.user_provider'
-        arguments:
-            $properties: []
 
     AppBundle\Security\SecurityLoginHandler:
         public: true
-        tag: app.security.login_handler
 
     AppBundle\Provider\UserTokenProvider:
         public: true
@@ -75,3 +60,30 @@ services:
     AppBundle\ArgumentResolver\RequestLocalisationValueResolver:
         tags:
             - { name: controller.argument_value_resolver, priority: 50 }
+
+    AppBundle\Handler\ApiExceptionHandler:
+        arguments:
+            $disabled: '%app.disable_api_exception_handler%'
+        public: true
+
+    AppBundle\Collector\ApiExceptionCollector:
+        public: true
+
+    AppBundle\Service\GoogleClient:
+        public: true
+        arguments:
+            $googleId: '%oauth.google_id%'
+
+    AppBundle\EventListener\ApiExceptionHandlerEventListener:
+        arguments:
+            $isDev: '%kernel.debug%'
+            $handlingGeneralException: '%app.handling_general_exception%'
+        tags:
+            -
+                name: kernel.event_listener
+                event: !php/const:Symfony\Component\HttpKernel\KernelEvents::EXCEPTION
+                method: onKernelException
+            -
+                name: kernel.event_listener
+                event: !php/const:AppBundle\AppEvents::API_CATCH_EXCEPTION
+                method: onApiException

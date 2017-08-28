@@ -29,6 +29,10 @@ class GoogleDirection extends AbstractApi implements ApiKeywordInterface
      */
     const API_DATA_TYPE = 'transport.google_direction';
 
+    const MODE_DRIVING = 'driving';
+    const MODE_WALKING = 'walking';
+    const MODE_BICYCLING = 'bicycling';
+
     /**
      * @var string
      */
@@ -83,15 +87,35 @@ class GoogleDirection extends AbstractApi implements ApiKeywordInterface
         return $this->parameters;
     }
 
+    /**
+     * @return array
+     */
+    public static function getTransportModes(): array
+    {
+        return [
+            self::MODE_BICYCLING,
+            self::MODE_DRIVING,
+            self::MODE_WALKING,
+        ];
+    }
+
+    public function getDirections(RequestLocalisation $localisation,  array $transportModes)
+    {
+        $directions = [];
+        foreach ($transportModes as $mode) {
+            $directions[] = $this->getDirection($localisation, $mode);
+        }
+
+        return $directions;
+    }
+
     public function getDirection(RequestLocalisation $localisation, $transportMode)
     {
-        // @todo Wait for input user feature to pass location
         $parameters = [
             'origin' => $localisation->getAddressFrom(),
             'destination' => $localisation->getAddressTo()
         ];
 
-        // @todo Refactor later need to push for the moment
         $parameters['units'] = 'metric';
         $parameters['mode'] = $transportMode;
         $parameters['key'] = $this->getParameters()['key'];
@@ -113,11 +137,11 @@ class GoogleDirection extends AbstractApi implements ApiKeywordInterface
         $transport = new TransportData();
         $type = $this->getType().'.'.$transportType;
         $transport->setType($type);
-        
+
         foreach ($object->routes as $record) {
             $legs = $record->legs[0];
             $transport->setDistance($legs->distance->text)
-                ->setDuration($legs->duration->text)
+                ->setDuration($legs->duration->value)
                 ->setStartAddressName($legs->start_address)
                 ->setEndAddressName($legs->end_address)
                 ->setStartLocation(new Localisation($legs->start_location->lat, $legs->start_location->lng))

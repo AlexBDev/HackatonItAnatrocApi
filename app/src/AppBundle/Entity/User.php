@@ -149,4 +149,14 @@ class User extends BaseUser
 
         return $this;
     }
+
+    /**
+     * @return $this
+     */
+    public function clearApiKey()
+    {
+        $this->apiKey = '';
+
+        return $this;
+    }
 }
