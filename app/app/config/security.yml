@@ -17,6 +17,6 @@ security:
         main:
             pattern: ^/user
             provider: api_key_user_provider
-            stateless: false
+            stateless: true
             simple_preauth:
                 authenticator: AppBundle\Security\ApiKeyAuthenticator
