@@ -54,9 +54,6 @@ class UserTokenProvider
     public function getUser($token): User
     {
         return $this->manager->getRepository(User::class)->findOneByApiKey($token);
-
-        return (new UserToken($token))
-            ->setUser($user);
     }
 
 }
