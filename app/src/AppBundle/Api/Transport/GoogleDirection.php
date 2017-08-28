@@ -141,7 +141,7 @@ class GoogleDirection extends AbstractApi implements ApiKeywordInterface
         foreach ($object->routes as $record) {
             $legs = $record->legs[0];
             $transport->setDistance($legs->distance->text)
-                ->setDuration($legs->duration->text)
+                ->setDuration($legs->duration->value)
                 ->setStartAddressName($legs->start_address)
                 ->setEndAddressName($legs->end_address)
                 ->setStartLocation(new Localisation($legs->start_location->lat, $legs->start_location->lng))
