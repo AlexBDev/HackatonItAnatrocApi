@@ -209,7 +209,7 @@ class DefaultController extends BaseController
         if (empty($user)) {
             $data->setErrors(['Unable to found user from apiKey']);
         } else {
-            $data->addData($user);
+            $data->setData($user);
         }
 
         return $this->response($data);
