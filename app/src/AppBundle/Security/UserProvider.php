@@ -65,7 +65,7 @@ class UserProvider implements UserProviderInterface
         $user = $this->repository->findOneByApiKey($token);
 
         if ($user === null) {
-            return $user->getUsername();
+            return null;
         }
 
         return $user->getUsername();
