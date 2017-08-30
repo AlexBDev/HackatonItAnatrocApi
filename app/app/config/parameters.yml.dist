@@ -17,10 +17,10 @@ parameters:
 
     # A secret key that's used to generate certain security-related tokens
     secret: ThisTokenIsNotSoSecretChangeIt
-    google_api_key.direction: 'setakey'
-    oauth.google_id: 'setakey'
-    oauth.google_secret: 'setakey'
-    oauth.facebook_id: 'setakey'
-    oauth.facebook_secret: 'setakey'
+    google_api_key.direction: ~
+    oauth.google_id: ~
+    oauth.google_secret: ~
+    oauth.facebook_id: ~
+    oauth.facebook_secret: ~
     app.disable_api_exception_handler: false
     app.handling_general_exception: true

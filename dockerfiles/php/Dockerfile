@@ -1,9 +1,12 @@
 FROM php:7.1-fpm
 
-ARG user=symfony
+ARG USER=symfony
+ARG USER_GID=1000
+ARG USER_UID=1000
 
 # Create user with home to work with permissions on files
-RUN adduser --gecos "" --disabled-password $user
+RUN addgroup --gid $USER_GID $USER
+RUN adduser --gecos "" --disabled-password --uid $USER_UID --gid $USER_GID $USER
 
 RUN apt-get clean && apt-get update
 
@@ -40,21 +43,21 @@ COPY ./conf/php.ini /usr/local/etc/php/php.ini
 COPY ./conf/www.conf.default /usr/local/etc/php-fpm.d/www.conf.default
 
 ADD https://getcomposer.org/composer.phar /usr/local/bin/composer
-RUN chown $user:$user /usr/local/bin/composer && chmod 775 /usr/local/bin/composer
+RUN chown $USER:$USER /usr/local/bin/composer && chmod 775 /usr/local/bin/composer
 
 ADD https://symfony.com/installer /usr/local/bin/symfony
-RUN chown $user:$user /usr/local/bin/symfony && chmod 775 /usr/local/bin/symfony
+RUN chown $USER:$USER /usr/local/bin/symfony && chmod 775 /usr/local/bin/symfony
 
 # Set password and add sudo group to new user
-RUN echo "$user:$user" | chpasswd
+RUN echo "$USER:$USER" | chpasswd
 RUN echo "root:root" | chpasswd
-RUN usermod -a -G sudo $user
+RUN usermod -a -G sudo $USER
 
-RUN echo "$user ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers
+RUN echo "$USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers
 
-USER $user
+USER $USER
 
-RUN echo "alias sf='php bin/console'\n"  >> /home/$user/.bashrc
+RUN echo "alias sf='php bin/console'\n"  >> /home/$USER/.bashrc
 
 WORKDIR /usr/share/nginx/html
 
