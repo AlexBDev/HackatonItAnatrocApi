@@ -1,18 +1,35 @@
 version: '3.0'
 services:
+    mysql:
+        image: mysql:5.7
+        volumes:
+            - mysql-data:/var/lib/mysql
+        environment:
+            - MYSQL_ROOT_PASSWORD=root
+        networks:
+            static-network:
+
     php:
         build:
             context: ./dockerfiles/php
             args:
-                - user=${USER}
+                - USER=${USER}
+                - USER_GID=${USER_GID:-1000}
+                - USER_UID=${USER_UID:-1000}
         volumes:
             - ./app:/usr/share/nginx/html
         networks:
             static-network:
+        links:
+            - mysql
+        depends_on:
+            - mysql
 
     nginx:
         build:
             context: dockerfiles/nginx/php
+            args:
+                - DNS_API=${DNS_API:-api.antroc}
         volumes:
             - ./app:/usr/share/nginx/html
         links:
@@ -28,3 +45,6 @@ networks:
         ipam:
             config:
                 - subnet: 172.40.0.0/24
+
+volumes:
+    mysql-data:

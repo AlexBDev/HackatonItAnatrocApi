@@ -1,5 +1,5 @@
 server {
-    server_name api.anatroc;
+    server_name %DNS_API%;
     root /usr/share/nginx/html/web/;
 
     client_max_body_size 100m;
