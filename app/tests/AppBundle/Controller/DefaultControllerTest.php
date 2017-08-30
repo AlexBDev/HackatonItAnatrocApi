@@ -10,7 +10,7 @@ class DefaultControllerTest extends WebTestCase
     {
         $client = static::createClient();
 
-        $client->request('GET', '/');
+        $client->request('GET', '/?addressFrom=Lyon&addressTo=Paris');
 
         $this->assertTrue($client->getResponse()->isSuccessful());
         $this->isJson($client->getResponse()->getContent());

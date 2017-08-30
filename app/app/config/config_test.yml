@@ -1,5 +1,5 @@
 parameters:
-    google_api_key.direction: '%env(GOOGLE_API_KEY_DIRECTION)%'
+    google_api_key.direction: 'notakey'
 
 imports:
     - { resource: config_dev.yml }
