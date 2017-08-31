@@ -150,10 +150,13 @@ class DefaultController extends BaseController
         } else {
             $address = $request->request->get('address');
             $description = $request->request->get('description');
+            $icon = $request->request->get('icon');
             $favorite = (new Favorite())
                 ->setUser($user)
                 ->setAddress($address)
+                ->setIcon($icon)
                 ->setDescription($description);
+
 
             $doctrine = $this->getDoctrine();
             $manager = $doctrine->getManager();
