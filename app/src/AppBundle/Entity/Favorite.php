@@ -105,29 +105,6 @@ class Favorite
         return $this;
     }
 
-    /**
-     * Set icone
-     *
-     * @param string $icone
-     *
-     * @return Favorite
-     */
-    public function setIcone($icone)
-    {
-        $this->icone = $icone;
-
-        return $this;
-    }
-
-    /**
-     * Get icone
-     *
-     * @return string
-     */
-    public function getIcone()
-    {
-        return $this->icone;
-    }
 
     /**
      * Set icon
