@@ -36,6 +36,13 @@ class Favorite
      */
     private $user;
 
+
+    /**
+     * @var string
+     * @ORM\Column(name="iconName",type="string")
+     */
+    private $icon;
+
     /**
      * @return mixed
      */
@@ -96,5 +103,30 @@ class Favorite
     {
         $this->user = $user;
         return $this;
+    }
+
+
+    /**
+     * Set icon
+     *
+     * @param string $icon
+     *
+     * @return Favorite
+     */
+    public function setIcon($icon)
+    {
+        $this->icon = $icon;
+
+        return $this;
+    }
+
+    /**
+     * Get icon
+     *
+     * @return string
+     */
+    public function getIcon()
+    {
+        return $this->icon;
     }
 }
